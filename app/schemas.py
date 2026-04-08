@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -46,5 +46,5 @@ class RecommendationResponse(BaseModel):
     recommended_window: str
     recommendations: List[CropRecommendation]
     advisory_text: str
-    debug_scores: Optional[Dict[str, float]] = None
+    debug_scores: Optional[Dict[str, Union[float, str]]] = None
     data_source: Optional[str] = None
