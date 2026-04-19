@@ -1,10 +1,11 @@
-# agroni
+# polimilpa
 
-Agroni es un sistema que recomienda policultivos para Nicaragua. Usa datos satelitales de Copernicus para identificar la combinacion ideal de cultivos de renta y alimentarios por finca, segun clima, terreno y temporada. Envia sugerencias por WhatsApp a productores para mejorar sus ingresos, resiliencia y seguridad alimentaria.
+Polimilpa es un sistema que recomienda policultivos para Nicaragua. Usa datos satelitales de Copernicus para identificar la combinacion ideal de cultivos de renta y alimentarios por finca, segun clima, terreno y temporada. Envia sugerencias por WhatsApp a productores para mejorar sus ingresos, resiliencia y seguridad alimentaria.
 
 ## MVP actual
 
 Este repositorio ya incluye una API base en FastAPI con un motor de reglas para recomendaciones por zona agroclimatica.
+Ahora tambien incluye autenticacion JWT con persistencia de usuarios y auditoria de login en base de datos.
 
 ### Requisitos
 
@@ -26,16 +27,58 @@ uvicorn app.main:app --reload
 
 API local: `http://127.0.0.1:8000`
 
+### Base de datos para autenticacion
+
+Por defecto se usa SQLite local (`DATABASE_URL=sqlite:///./polimilpa.db`) para desarrollo rapido.
+
+Para produccion se recomienda PostgreSQL:
+
+```fish
+set -x DATABASE_URL postgresql+psycopg2://usuario:password@localhost:5432/polimilpa
+```
+
+Si quieres usar PostGIS, crea la base con extension PostGIS y usa la misma `DATABASE_URL`.
+En este punto del proyecto, PostGIS no es obligatorio para login; sera util en capas geoespaciales de parcelas.
+
 ### Endpoints
 
 - `GET /health`
+- `POST /v1/auth/login`
+- `GET /v1/auth/me`
+- `POST /v1/farmers`
+- `GET /v1/farmers`
+- `GET /v1/farmers/{farmer_id}`
+- `PUT /v1/farmers/{farmer_id}`
+- `DELETE /v1/farmers/{farmer_id}`
 - `POST /v1/recommendations`
 - `POST /v1/recommendations/auto`
 
-### Ejemplo de request
+### Ejemplo de login
 
 ```fish
+curl -X POST "http://127.0.0.1:8000/v1/auth/login" \
+	-H "Content-Type: application/json" \
+	-d '{
+		"username": "tecnico",
+		"password": "tecnico123"
+	}'
+```
+
+Usuarios demo por defecto (MVP):
+
+- `superadmin / superadmin123`
+- `admin / admin123`
+- `tecnico / tecnico123`
+
+### Ejemplo de request autenticado
+
+```fish
+set -x TOKEN (curl -s -X POST "http://127.0.0.1:8000/v1/auth/login" \
+	-H "Content-Type: application/json" \
+	-d '{"username":"tecnico","password":"tecnico123"}' | jq -r .access_token)
+
 curl -X POST "http://127.0.0.1:8000/v1/recommendations" \
+	-H "Authorization: Bearer $TOKEN" \
 	-H "Content-Type: application/json" \
 	-d '{
 		"parcel_id": "PAR-001",
