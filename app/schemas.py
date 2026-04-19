@@ -18,8 +18,12 @@ class ParcelInput(BaseModel):
     agro_zone: AgroZone
     slope_percent: float = Field(..., ge=0, le=100)
     soil_moisture: float = Field(..., ge=0, le=1, description="Escala normalizada 0-1")
-    shade_index: float = Field(..., ge=0, le=1, description="0 sin sombra, 1 sombra muy densa")
-    stress_index: float = Field(..., ge=0, le=1, description="0 saludable, 1 estres alto")
+    shade_index: float = Field(
+        ..., ge=0, le=1, description="0 sin sombra, 1 sombra muy densa"
+    )
+    stress_index: float = Field(
+        ..., ge=0, le=1, description="0 saludable, 1 estres alto"
+    )
     seasonal_forecast: str = Field(..., description="dry, normal o wet")
 
 
@@ -30,7 +34,10 @@ class AutoParcelInput(BaseModel):
     agro_zone: AgroZone
     lat: float
     lon: float
-    seasonal_forecast: str = Field(..., description="dry, normal o wet")
+    seasonal_forecast: Optional[str] = Field(
+        default=None,
+        description="dry, normal o wet. Opcional; si no viene, se intenta resolver desde C3S",
+    )
 
 
 class CropRecommendation(BaseModel):
