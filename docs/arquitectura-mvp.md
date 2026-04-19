@@ -17,7 +17,7 @@ Construir un flujo funcional que genere recomendaciones de policultivo por parce
 
 ## Capas minimas
 - Capa 1: Sentinel-2 SR (MSAVI2 y cobertura vegetal).
-- Capa 2: Copernicus DEM GLO-30 (pendiente y riesgo de escorrentia).
+- Capa 2: Copernicus DEM GLO-30 (pendiente y riesgo de escorrentia). 
 - Capa 3: Sentinel-1 GRD (condicion de humedad en alta nubosidad).
 
 ## Roadmap corto
