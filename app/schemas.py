@@ -40,6 +40,67 @@ class AutoParcelInput(BaseModel):
     )
 
 
+class LoginInput(BaseModel):
+    username: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class UserResponse(BaseModel):
+    username: str
+    role: str
+    full_name: str
+
+
+class FarmerBase(BaseModel):
+    farmer_code: str = Field(..., description="Codigo unico del agricultor")
+    full_name: str
+    contact_phone: str = ""
+    farm_name: str = ""
+    municipality: str
+    department: str
+    agro_zone: AgroZone
+    lat: Optional[float] = None
+    lon: Optional[float] = None
+    technician_username: Optional[str] = None
+
+
+class FarmerCreate(FarmerBase):
+    pass
+
+
+class FarmerUpdate(BaseModel):
+    full_name: Optional[str] = None
+    contact_phone: Optional[str] = None
+    farm_name: Optional[str] = None
+    municipality: Optional[str] = None
+    department: Optional[str] = None
+    agro_zone: Optional[AgroZone] = None
+    lat: Optional[float] = None
+    lon: Optional[float] = None
+    technician_username: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class FarmerResponse(BaseModel):
+    id: int
+    farmer_code: str
+    full_name: str
+    contact_phone: str
+    farm_name: str
+    municipality: str
+    department: str
+    agro_zone: AgroZone
+    lat: Optional[float] = None
+    lon: Optional[float] = None
+    technician_username: str
+    is_active: bool
+
+
 class CropRecommendation(BaseModel):
     rent_crop: str
     food_crop: str
