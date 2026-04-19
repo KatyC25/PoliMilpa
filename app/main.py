@@ -117,13 +117,17 @@ def me(user: UserIdentity = Depends(get_current_user)) -> UserResponse:
     )
 
 
-@app.post("/v1/farmers", response_model=FarmerResponse, status_code=status.HTTP_201_CREATED)
+@app.post(
+    "/v1/farmers", response_model=FarmerResponse, status_code=status.HTTP_201_CREATED
+)
 def create_farmer(
     payload: FarmerCreate,
     user: UserIdentity = Depends(require_roles("superadmin", "admin", "tecnico")),
     db: Session = Depends(get_db),
 ) -> FarmerResponse:
-    existing = db.query(Farmer).filter(Farmer.farmer_code == payload.farmer_code).first()
+    existing = (
+        db.query(Farmer).filter(Farmer.farmer_code == payload.farmer_code).first()
+    )
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -193,7 +197,9 @@ def get_farmer(
 ) -> FarmerResponse:
     farmer = db.query(Farmer).filter(Farmer.id == farmer_id).first()
     if farmer is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agricultor no encontrado")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Agricultor no encontrado"
+        )
 
     _validate_technician_scope(user, farmer.technician_username)
     return _farmer_to_response(farmer)
@@ -208,7 +214,9 @@ def update_farmer(
 ) -> FarmerResponse:
     farmer = db.query(Farmer).filter(Farmer.id == farmer_id).first()
     if farmer is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agricultor no encontrado")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Agricultor no encontrado"
+        )
 
     _validate_technician_scope(user, farmer.technician_username)
 
@@ -249,7 +257,9 @@ def delete_farmer(
 ) -> None:
     farmer = db.query(Farmer).filter(Farmer.id == farmer_id).first()
     if farmer is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agricultor no encontrado")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Agricultor no encontrado"
+        )
 
     _validate_technician_scope(user, farmer.technician_username)
     db.delete(farmer)
