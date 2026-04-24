@@ -8,6 +8,7 @@ Estado actual del repo:
 - CRUD de agricultores.
 - Recomendacion manual (`/v1/recommendations`).
 - Recomendacion automatica (`/v1/recommendations/auto`) con GEE + C3S.
+- Endpoints publicos de demo (`/v1/demo/cases`).
 - Persistencia local con SQLite por defecto.
 
 ## Requisitos
@@ -95,6 +96,8 @@ Si no defines `POLIMILPA_USERS_JSON`, se crean estos usuarios:
 ## Endpoints
 
 - `GET /health`
+- `GET /v1/demo/cases`
+- `GET /v1/demo/cases/{case_code}`
 - `POST /v1/auth/login`
 - `GET /v1/auth/me`
 - `POST /v1/farmers`
@@ -104,6 +107,36 @@ Si no defines `POLIMILPA_USERS_JSON`, se crean estos usuarios:
 - `DELETE /v1/farmers/{farmer_id}`
 - `POST /v1/recommendations`
 - `POST /v1/recommendations/auto`
+
+## Demo publico (Streamlit)
+
+1. Cargar caso demo inicial en PostgreSQL:
+
+```fish
+psql -p 5432 -d polimilpa -U katy -f scripts/seed_public_demo_cases.sql
+```
+
+Este seed carga dos casos publicos de demo: `espinoza-001` y `las-flores-002`.
+
+2. Verificar que el endpoint publico ya devuelve datos:
+
+```fish
+curl http://127.0.0.1:8000/v1/demo/cases
+```
+
+3. Levantar interfaz Streamlit:
+
+```fish
+source .venv/bin/activate.fish
+streamlit run streamlit_app.py
+```
+
+Opcional para apuntar Streamlit a otra URL de API:
+
+```fish
+set -x POLIMILPA_API_URL http://127.0.0.1:8000
+streamlit run streamlit_app.py
+```
 
 ## Pruebas
 
