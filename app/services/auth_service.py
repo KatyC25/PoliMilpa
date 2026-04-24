@@ -20,10 +20,9 @@ class UserIdentity:
 
 class AuthService:
     def __init__(self) -> None:
-        self.secret_key = os.getenv(
-            "JWT_SECRET_KEY",
-            "polimilpa-dev-secret-change-this-key-min-32",
-        )
+        self.secret_key = os.getenv("JWT_SECRET_KEY")
+        if not self.secret_key:
+            raise RuntimeError("JWT_SECRET_KEY is required")
         self.algorithm = os.getenv("JWT_ALGORITHM", "HS256")
         self.exp_minutes = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
         self._pwd_context = CryptContext(
@@ -42,24 +41,7 @@ class AuthService:
                     return loaded
             except json.JSONDecodeError:
                 pass
-
-        return {
-            "superadmin": {
-                "password": "superadmin123",
-                "role": "superadmin",
-                "full_name": "Super Administrador",
-            },
-            "admin": {
-                "password": "admin123",
-                "role": "admin",
-                "full_name": "Administrador",
-            },
-            "tecnico": {
-                "password": "tecnico123",
-                "role": "tecnico",
-                "full_name": "Tecnico",
-            },
-        }
+        raise RuntimeError("POLIMILPA_USERS_JSON is required")
 
     def _seed_users_if_needed(self) -> None:
         users = self._load_bootstrap_users()

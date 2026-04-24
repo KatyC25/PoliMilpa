@@ -53,6 +53,8 @@ JWT_ALGORITHM=HS256
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
 
 DATABASE_URL=sqlite:///./polimilpa.db
+
+POLIMILPA_USERS_JSON={"superadmin":{"password":"<cambia-esto>","role":"superadmin","full_name":"Super Administrador"},"admin":{"password":"<cambia-esto>","role":"admin","full_name":"Administrador"},"tecnico":{"password":"<cambia-esto>","role":"tecnico","full_name":"Tecnico"}}
 ```
 
 ## GEE integrado
@@ -87,11 +89,7 @@ Para C3S necesitas:
 
 ## Usuarios iniciales
 
-Si no defines `POLIMILPA_USERS_JSON`, se crean estos usuarios:
-
-- `superadmin / superadmin123`
-- `admin / admin123`
-- `tecnico / tecnico123`
+Debes definir `POLIMILPA_USERS_JSON` con credenciales seguras. Si no existe, el servicio falla al iniciar.
 
 ## Endpoints
 
