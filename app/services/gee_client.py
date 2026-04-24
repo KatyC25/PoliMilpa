@@ -1,3 +1,4 @@
+import datetime as dt
 import os
 from typing import Any, Dict, Optional
 
@@ -44,12 +45,13 @@ class GEEClient:
         ee = self._ee
         point = ee.Geometry.Point([lon, lat])
         roi = point.buffer(120).bounds()
+        start_date, end_date = self._gee_date_range()
 
         # Sentinel-2: MSAVI2 como proxy de vigor/cobertura para sombra y estres.
         s2 = (
             ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
             .filterBounds(roi)
-            .filterDate("2024-01-01", "2026-12-31")
+            .filterDate(start_date, end_date)
             .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 50))
         )
         s2_img = ee.Image(s2.median())
@@ -73,7 +75,7 @@ class GEEClient:
         s1 = (
             ee.ImageCollection("COPERNICUS/S1_GRD")
             .filterBounds(roi)
-            .filterDate("2024-01-01", "2026-12-31")
+            .filterDate(start_date, end_date)
             .filter(ee.Filter.eq("instrumentMode", "IW"))
             .filter(ee.Filter.listContains("transmitterReceiverPolarisation", "VV"))
         )
@@ -116,6 +118,12 @@ class GEEClient:
             "lat": lat,
             "lon": lon,
         }
+
+    @staticmethod
+    def _gee_date_range(months_back: int = 24) -> tuple[str, str]:
+        end = dt.date.today()
+        start = end - dt.timedelta(days=months_back * 30)
+        return start.isoformat(), end.isoformat()
 
     def get_parcel_features(
         self,
