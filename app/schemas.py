@@ -116,3 +116,17 @@ class RecommendationResponse(BaseModel):
     advisory_text: str
     debug_scores: Optional[Dict[str, Union[float, str]]] = None
     data_source: Optional[str] = None
+
+
+class PublicDemoCaseResponse(BaseModel):
+    id: int
+    case_code: str
+    title: str
+    municipality: str
+    department: str
+    agro_zone: str
+    lat: float
+    lon: float
+    recommendation_text: str
+    whatsapp_text: str
+    map_reference: str

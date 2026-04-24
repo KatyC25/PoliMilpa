@@ -61,3 +61,29 @@ class Farmer(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+
+
+class PublicDemoCase(Base):
+    __tablename__ = "public_demo_cases"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    case_code: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    title: Mapped[str] = mapped_column(String(200), index=True)
+    municipality: Mapped[str] = mapped_column(String(120), index=True)
+    department: Mapped[str] = mapped_column(String(120), index=True)
+    agro_zone: Mapped[str] = mapped_column(String(50), index=True)
+    lat: Mapped[float] = mapped_column(Float)
+    lon: Mapped[float] = mapped_column(Float)
+    recommendation_text: Mapped[str] = mapped_column(String(1000))
+    whatsapp_text: Mapped[str] = mapped_column(String(1000), default="")
+    map_reference: Mapped[str] = mapped_column(String(500), default="")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )

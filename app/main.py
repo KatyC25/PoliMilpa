@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.db import get_db
-from app.models import Farmer
+from app.models import Farmer, PublicDemoCase
 from app.schemas import (
     AutoParcelInput,
     FarmerCreate,
@@ -14,6 +14,7 @@ from app.schemas import (
     FarmerUpdate,
     LoginInput,
     ParcelInput,
+    PublicDemoCaseResponse,
     RecommendationResponse,
     TokenResponse,
     UserResponse,
@@ -89,9 +90,58 @@ def _validate_technician_scope(user: UserIdentity, technician_username: str) -> 
         )
 
 
+def _public_case_to_response(case: PublicDemoCase) -> PublicDemoCaseResponse:
+    return PublicDemoCaseResponse(
+        id=case.id,
+        case_code=case.case_code,
+        title=case.title,
+        municipality=case.municipality,
+        department=case.department,
+        agro_zone=case.agro_zone,
+        lat=case.lat,
+        lon=case.lon,
+        recommendation_text=case.recommendation_text,
+        whatsapp_text=case.whatsapp_text,
+        map_reference=case.map_reference,
+    )
+
+
 @app.get("/health")
 def healthcheck() -> dict:
     return {"status": "ok", "service": settings.app_name}
+
+
+@app.get("/v1/demo/cases", response_model=list[PublicDemoCaseResponse])
+def list_public_demo_cases(
+    active_only: bool = Query(default=True),
+    db: Session = Depends(get_db),
+) -> list[PublicDemoCaseResponse]:
+    query = db.query(PublicDemoCase)
+    if active_only:
+        query = query.filter(PublicDemoCase.is_active.is_(True))
+
+    cases = query.order_by(PublicDemoCase.id.desc()).all()
+    return [_public_case_to_response(case) for case in cases]
+
+
+@app.get("/v1/demo/cases/{case_code}", response_model=PublicDemoCaseResponse)
+def get_public_demo_case(
+    case_code: str,
+    db: Session = Depends(get_db),
+) -> PublicDemoCaseResponse:
+    case = (
+        db.query(PublicDemoCase)
+        .filter(PublicDemoCase.case_code == case_code)
+        .filter(PublicDemoCase.is_active.is_(True))
+        .first()
+    )
+
+    if case is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Caso demo no encontrado",
+        )
+    return _public_case_to_response(case)
 
 
 @app.post("/v1/auth/login", response_model=TokenResponse)
