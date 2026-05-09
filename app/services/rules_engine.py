@@ -33,10 +33,9 @@ DEPARTMENT_ZONE_HINTS = {
         "leon",
         "managua",
         "masaya",
+        "granada",
         "rivas",
-        "esteli",
         "madriz",
-        "nueva segovia",
     },
     AgroZone.HIGHLAND_HUMID: {
         "jinotega",
@@ -51,6 +50,8 @@ DEPARTMENT_ZONE_HINTS = {
         "carazo",
         "boaco",
         "chontales",
+        "esteli",
+        "nueva segovia",
     },
 }
 
@@ -65,11 +66,9 @@ MUNICIPALITY_ZONE_HINTS = {
         "tipitapa",
         "masaya",
         "nindiri",
+        "granada",
         "rivas",
         "belen",
-        "esteli",
-        "somoto",
-        "ocotal",
     },
     AgroZone.HIGHLAND_HUMID: {
         "jinotega",
@@ -93,6 +92,9 @@ MUNICIPALITY_ZONE_HINTS = {
         "boaco",
         "camoapa",
         "juigalpa",
+        "esteli",
+        "somoto",
+        "ocotal",
     },
 }
 
