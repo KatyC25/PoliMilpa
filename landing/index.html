@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PoliMilpa | Recomendaciones para el campo</title>
+    <link id="favicon" rel="icon" href="assets/logo-polimilpa.png" type="image/png" />
+    <link rel="apple-touch-icon" href="assets/logo-polimilpa.png" />
+
+    <script>
+      (() => {
+        try {
+          const img = new Image();
+          img.decoding = "async";
+          img.onload = () => {
+            const size = 64;
+            const padding = 1;
+
+            const canvas = document.createElement("canvas");
+            canvas.width = size;
+            canvas.height = size;
+
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return;
+
+            const probeMax = 256;
+            const probeScale = Math.min(1, probeMax / Math.max(img.width, img.height));
+            const probeW = Math.max(1, Math.round(img.width * probeScale));
+            const probeH = Math.max(1, Math.round(img.height * probeScale));
+            const probe = document.createElement("canvas");
+            probe.width = probeW;
+            probe.height = probeH;
+            const pctx = probe.getContext("2d");
+            if (!pctx) return;
+            pctx.clearRect(0, 0, probeW, probeH);
+            pctx.drawImage(img, 0, 0, probeW, probeH);
+
+            const imageData = pctx.getImageData(0, 0, probeW, probeH);
+            const { data } = imageData;
+
+            function cornerRGB(ix, iy) {
+              const i = (iy * probeW + ix) * 4;
+              return [data[i], data[i + 1], data[i + 2], data[i + 3]];
+            }
+
+            const c1 = cornerRGB(0, 0);
+            const c2 = cornerRGB(probeW - 1, 0);
+            const c3 = cornerRGB(0, probeH - 1);
+            const c4 = cornerRGB(probeW - 1, probeH - 1);
+            const bgR = Math.round((c1[0] + c2[0] + c3[0] + c4[0]) / 4);
+            const bgG = Math.round((c1[1] + c2[1] + c3[1] + c4[1]) / 4);
+            const bgB = Math.round((c1[2] + c2[2] + c3[2] + c4[2]) / 4);
+            const bgA = Math.round((c1[3] + c2[3] + c3[3] + c4[3]) / 4);
+
+            let minX = probeW;
+            let minY = probeH;
+            let maxX = -1;
+            let maxY = -1;
+
+            for (let y = 0; y < probeH; y++) {
+              for (let x = 0; x < probeW; x++) {
+                const idx = (y * probeW + x) * 4;
+                const r = data[idx];
+                const g = data[idx + 1];
+                const b = data[idx + 2];
+                const a = data[idx + 3];
+
+                // Considera "contenido" si no es transparente y se diferencia del fondo.
+                const bgDiff = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+                const alphaDiff = Math.abs(a - bgA);
+                const isContent = a > 10 && (bgDiff > 40 || alphaDiff > 20);
+
+                if (isContent) {
+                  if (x < minX) minX = x;
+                  if (y < minY) minY = y;
+                  if (x > maxX) maxX = x;
+                  if (y > maxY) maxY = y;
+                }
+              }
+            }
+
+            if (maxX < 0 || maxY < 0) {
+              minX = 0;
+              minY = 0;
+              maxX = probeW - 1;
+              maxY = probeH - 1;
+            }
+
+            minX = Math.max(0, minX - 1);
+            minY = Math.max(0, minY - 1);
+            maxX = Math.min(probeW - 1, maxX + 1);
+            maxY = Math.min(probeH - 1, maxY + 1);
+
+            const cropW = Math.max(1, maxX - minX + 1);
+            const cropH = Math.max(1, maxY - minY + 1);
+
+            const max = size - padding * 2;
+            const outScale = Math.min(max / cropW, max / cropH);
+            const w = Math.round(cropW * outScale);
+            const h = Math.round(cropH * outScale);
+            const dx = Math.round((size - w) / 2);
+            const dy = Math.round((size - h) / 2);
+
+            ctx.clearRect(0, 0, size, size);
+            ctx.drawImage(probe, minX, minY, cropW, cropH, dx, dy, w, h);
+
+            let link = document.getElementById("favicon");
+            if (!link) {
+              link = document.createElement("link");
+              link.id = "favicon";
+              link.rel = "icon";
+              document.head.appendChild(link);
+            }
+            link.type = "image/png";
+            link.sizes = "64x64";
+            link.href = canvas.toDataURL("image/png");
+          };
+          img.src = "assets/logo-polimilpa.png";
+        } catch {
+          /* noop */
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
+    <header class="nav">
+      <div class="container nav-inner">
+        <div class="brand">
+          <div class="brand-mark">
+            <img src="assets/logo-polimilpa.png" alt="Logo PoliMilpa" />
+          </div>
+          <span>PoliMilpa</span>
+        </div>
+        <nav class="nav-links">
+          <a href="#inicio">Inicio</a>
+          <a href="#como">Como funciona</a>
+          <a href="#acerca">Acerca de</a>
+        </nav>
+        <div class="nav-cta">
+          <a class="button primary small" href="http://localhost:8501" target="_blank" rel="noopener noreferrer">
+            Probar demo
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="inicio" class="hero">
+        <div class="container hero-inner">
+          <div class="hero-left">
+            <h1>
+              Mejores decisiones para tu finca,
+              <span>con datos reales</span>
+            </h1>
+            <p class="lead">
+              Imagenes satelitales y datos climaticos que te ayudan a sembrar
+              mejor y producir mas.
+            </p>
+            <div class="hero-actions">
+              <a class="button primary" href="http://localhost:8501" target="_blank" rel="noopener noreferrer">
+                Ver analisis de mi finca <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+            <div class="hero-note">
+              <span class="note-dot"></span>
+              <span>Tecnologia que acompana al productor, en cada decision.</span>
+            </div>
+          </div>
+          <div class="hero-right">
+            <div class="ndvi-card">
+              <div class="ndvi-image">
+                <img
+                  src="assets/ndvi-map.png"
+                  alt="Mapa de analisis NDVI mostrando zonas de vegetacion"
+                />
+                <div class="ndvi-timestamp">
+                  <span class="ndvi-icon">⟳</span>
+                  <span>Actualizado hace 2 dias</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="container">
+        <section class="feature-strip">
+          <div class="strip-card">
+            <div class="icon green"><i class="fa-solid fa-satellite"></i></div>
+            <div>
+              <strong>Datos satelitales</strong>
+              <p>Copernicus actualizado para decisiones confiables.</p>
+            </div>
+          </div>
+          <div class="strip-card">
+            <div class="icon amber"><i class="fa-solid fa-rotate"></i></div>
+            <div>
+              <strong>Actualizacion semanal</strong>
+              <p>Monitoreo constante para anticipar riesgos.</p>
+            </div>
+          </div>
+          <div class="strip-card">
+            <div class="icon teal"><i class="fa-solid fa-location-dot"></i></div>
+            <div>
+              <strong>Recomendaciones por parcela</strong>
+              <p>Acciones claras para mejores resultados.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="productores" class="zones zones-panel">
+          <div class="zones-left">
+            <p class="zones-kicker">¿No tienes tecnico?</p>
+            <h2>Empieza por tu zona</h2>
+            <p>
+              Obten una recomendacion rapida segun tu region usando datos
+              climaticos y satelitales.
+            </p>
+            <div class="zones-steps">
+              <div class="zones-step">
+                <div class="step-icon">
+                  <i class="fa-solid fa-map"></i>
+                </div>
+                <div>
+                  <span>Elige tu zona</span>
+                  <p>Selecciona tu region en el mapa.</p>
+                </div>
+              </div>
+              <div class="zones-step">
+                <div class="step-icon">
+                  <i class="fa-solid fa-cloud-sun"></i>
+                </div>
+                <div>
+                  <span>Recibe informacion</span>
+                  <p>Revisamos clima, humedad y condiciones actuales.</p>
+                </div>
+              </div>
+              <div class="zones-step">
+                <div class="step-icon">
+                  <i class="fa-solid fa-seedling"></i>
+                </div>
+                <div>
+                  <span>Obten recomendacion</span>
+                  <p>Te sugerimos cultivos adecuados para hoy.</p>
+                </div>
+              </div>
+            </div>
+            <div class="hero-actions">
+              <a class="button primary" href="http://localhost:8501" target="_blank" rel="noopener noreferrer">
+                Ver recomendacion por zona
+              </a>
+            </div>
+            <div class="zone-note">
+              <i class="fa-solid fa-lock" aria-hidden="true"></i>
+              <span>El analisis de finca requiere el apoyo de un tecnico.</span>
+            </div>
+          </div>
+          <div class="zones-media">
+            <object
+              class="zones-map"
+              data="assets/nicaragua.svg"
+              type="image/svg+xml"
+              aria-label="Mapa de zonas agroclimaticas"
+            ></object>
+            <div class="zones-legend">
+              <strong>Zonas agroclimaticas</strong>
+              <div><span class="legend-dot highland"></span>Humedo de altura</div>
+              <div><span class="legend-dot subhumid"></span>Caribe subhumedo</div>
+              <div><span class="legend-dot transition"></span>Zona de transicion</div>
+              <div><span class="legend-dot dry"></span>Corredor seco</div>
+            </div>
+          </div>
+        </section>
+
+        <section id="como" class="steps">
+          <div class="steps-header">
+            <p class="eyebrow">Como funciona</p>
+            <h2>Tu ruta en tres pasos</h2>
+          </div>
+          <div class="steps-grid">
+            <div class="step-card">
+              <div class="step-top">
+                <span class="step-badge">01</span>
+                <div class="steps-icon" aria-hidden="true"><i class="fa-solid fa-map"></i></div>
+              </div>
+              <h3>Selecciona tu zona</h3>
+              <p>Ubicamos tu region y conectamos datos satelitales actuales.</p>
+              <div class="card-illustration" aria-hidden="true">
+                <img
+                  class="card-illustration-img"
+                  src="assets/8223fe61-4935-4507-9a6e-2decc3debd46.jpg"
+                  alt=""
+                />
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-top">
+                <span class="step-badge">02</span>
+                <div class="steps-icon" aria-hidden="true"><i class="fa-solid fa-cloud-sun"></i></div>
+              </div>
+              <h3>Analizamos clima y suelo</h3>
+              <p>Evaluamos humedad, pendiente y estres para cada parcela.</p>
+              <div class="card-illustration" aria-hidden="true">
+                <img
+                  class="card-illustration-img"
+                  src="assets/59Z_2112.w009.n001.61A.p25.61.jpg"
+                  alt=""
+                />
+              </div>
+            </div>
+            <div class="step-card">
+              <div class="step-top">
+                <span class="step-badge">03</span>
+                <div class="steps-icon" aria-hidden="true"><i class="fa-solid fa-seedling"></i></div>
+              </div>
+              <h3>Recibes una accion clara</h3>
+              <p>Semaforo, ventana de siembra y combinacion recomendada.</p>
+              <div class="card-illustration" aria-hidden="true">
+                <img class="card-illustration-img" src="assets/accion.png" alt="" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="acerca" class="about">
+          <div class="about-header">
+            <div class="about-pill" aria-label="Seccion acerca de PoliMilpa">
+              <i class="fa-solid fa-leaf" aria-hidden="true"></i>
+              <span>Acerca de PoliMilpa</span>
+            </div>
+            <h2>Tecnologia pensada para quien trabaja la tierra</h2>
+            <p class="about-lead">
+              Convertimos datos satelitales y climaticos en recomendaciones simples y utiles para
+              productores y tecnicos agricolas.
+            </p>
+          </div>
+          <div class="about-grid">
+            <div class="about-card">
+              <div class="about-card-icon" aria-hidden="true"><i class="fa-solid fa-circle-question"></i></div>
+              <h3>El problema</h3>
+              <p>Decisiones sin informacion clara sobre suelo, clima o cultivo.</p>
+              <div class="card-illustration" aria-hidden="true">
+                <img class="card-illustration-img" src="assets/rice%20field-bro.svg" alt="" />
+              </div>
+            </div>
+            <div class="about-card">
+              <div class="about-card-icon" aria-hidden="true"><i class="fa-solid fa-satellite"></i></div>
+              <h3>Nuestra solucion</h3>
+              <p>Modelos que traducen datos complejos en acciones simples.</p>
+              <div class="card-illustration" aria-hidden="true">
+                <img class="card-illustration-img" src="assets/GIU%20NIC%201014-14.jpg" alt="" />
+              </div>
+            </div>
+            <div class="about-card">
+              <div class="about-card-icon" aria-hidden="true"><i class="fa-solid fa-people-group"></i></div>
+              <h3>Como lo hacemos</h3>
+              <p>Trabajamos con tecnicos y cooperativas para validar terreno.</p>
+              <div class="card-illustration" aria-hidden="true">
+                <img class="card-illustration-img" src="assets/Earth%20and%20Moon-pana.svg" alt="" />
+              </div>
+            </div>
+          </div>
+          <div class="about-strip" aria-label="Basado en datos reales">
+            <div class="about-strip-item">
+              <div class="strip-icon" aria-hidden="true"><i class="fa-solid fa-satellite"></i></div>
+              <div>
+                <strong>Datos Copernicus (ESA)</strong>
+                <span>Informacion confiable a nivel global.</span>
+              </div>
+            </div>
+            <div class="about-strip-item">
+              <div class="strip-icon" aria-hidden="true"><i class="fa-solid fa-image"></i></div>
+              <div>
+                <strong>Imagenes satelitales actualizadas</strong>
+                <span>Monitoreo constante de tus parcelas.</span>
+              </div>
+            </div>
+            <div class="about-strip-item">
+              <div class="strip-icon" aria-hidden="true"><i class="fa-solid fa-cloud"></i></div>
+              <div>
+                <strong>Modelos climaticos</strong>
+                <span>Pronosticos precisos para cada region.</span>
+              </div>
+            </div>
+            <div class="about-strip-item">
+              <div class="strip-icon" aria-hidden="true"><i class="fa-solid fa-map"></i></div>
+              <div>
+                <strong>Analisis por parcela</strong>
+                <span>Recomendaciones especificas y accionables.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-closer">
+            <div class="about-closer-icon" aria-hidden="true">
+              <img class="about-closer-logo" src="assets/logo-polimilpa.png" alt="" />
+            </div>
+            <p>
+              <strong>PoliMilpa no reemplaza al productor.</strong>
+              <span>Lo acompana con mejores decisiones.</span>
+            </p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <span class="footer-left">© <span id="footer-year"></span> PoliMilpa. Todos los derechos reservados.</span>
+        <span class="footer-right">Hecho con <span aria-hidden="true">♥</span><span class="sr-only">amor</span> para el campo centroamericano.</span>
+      </div>
+    </footer>
+
+    <script>
+      (() => {
+        const yearNode = document.getElementById("footer-year");
+        if (!yearNode) return;
+        yearNode.textContent = String(new Date().getFullYear());
+      })();
+    </script>
+
+    <script>
+      (() => {
+        try {
+          if ("scrollRestoration" in history) {
+            history.scrollRestoration = "manual";
+          }
+
+          const nav = performance.getEntriesByType?.("navigation")?.[0] ?? null;
+          const navType = nav?.type ?? (performance.navigation?.type === 1 ? "reload" : "navigate");
+
+          if (navType === "reload") {
+            if (location.hash) {
+              history.replaceState(null, "", location.pathname + location.search);
+            }
+            window.scrollTo(0, 0);
+          }
+        } catch {
+          /* noop */
+        }
+      })();
+    </script>
+
+    <script>
+      (() => {
+        if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+          return;
+        }
+
+        const revealTargets = document.querySelectorAll(
+          ".strip-card, .zones-left, .zones-media, .step-card, .about-card, .about-strip-item, .about-closer"
+        );
+
+        if (!revealTargets.length) return;
+
+        const targets = Array.from(revealTargets);
+
+        if (!("IntersectionObserver" in window)) {
+          targets.forEach((el) => {
+            el.classList.add("reveal", "is-visible");
+          });
+          return;
+        }
+
+        const isInView = (el) => {
+          const rect = el.getBoundingClientRect();
+          return rect.top < window.innerHeight * 0.9 && rect.bottom > 0;
+        };
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              entry.target.classList.add("is-visible");
+              entry.target.style.transitionDelay = "0ms";
+              observer.unobserve(entry.target);
+            });
+          },
+          {
+            threshold: 0.12,
+            rootMargin: "0px 0px -10% 0px",
+          }
+        );
+
+        targets.forEach((el, index) => {
+          el.classList.add("reveal");
+          let delay = Math.min((index % 4) * 50, 150);
+          if (el.classList.contains("zones-media") || el.classList.contains("zones-left")) {
+            delay = 0;
+          }
+          el.style.transitionDelay = String(delay) + "ms";
+
+          if (isInView(el)) {
+            el.classList.add("is-visible");
+            el.style.transitionDelay = "0ms";
+            return;
+          }
+
+          observer.observe(el);
+        });
+      })();
+    </script>
+  </body>
+</html>
