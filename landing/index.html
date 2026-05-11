@@ -272,13 +272,16 @@
             </div>
           </div>
           <div class="zones-media">
-            <img
+            <object
               class="zones-map"
-              src="assets/nicaragua.svg"
-              alt="Mapa de zonas agroclimáticas"
+              data="assets/nicaragua.svg"
               loading="lazy"
               decoding="async"
-            />
+              role="img"
+              aria-label="Mapa de zonas agroclimáticas"
+            >
+              Mapa de zonas agroclimaticas
+            </object>
             <div class="zones-legend">
               <strong>Zonas agroclimáticas</strong>
               <div><span class="legend-dot highland"></span>Húmedo de altura</div>
@@ -473,6 +476,43 @@
         yearNode.textContent = String(new Date().getFullYear());
       })();
     </script>
+
+      <script>
+        (() => {
+          const mq = '(max-width: 640px)';
+          const swap = () => {
+            const isMobile = window.matchMedia(mq).matches;
+            const el = document.querySelector('.zones-map');
+            if (!el) return;
+            if (isMobile && el.tagName.toLowerCase() === 'object') {
+              window.__zonesMapOrig = el.outerHTML;
+              const img = document.createElement('img');
+              img.className = el.className;
+              img.src = el.getAttribute('data') || '';
+              img.alt = el.getAttribute('aria-label') || '';
+              img.loading = el.getAttribute('loading') || 'lazy';
+              img.decoding = el.getAttribute('decoding') || 'async';
+              img.role = 'img';
+              el.replaceWith(img);
+            } else if (!isMobile && el.tagName.toLowerCase() === 'img' && window.__zonesMapOrig) {
+              const wrapper = document.createElement('div');
+              wrapper.innerHTML = window.__zonesMapOrig;
+              const obj = wrapper.firstElementChild;
+              el.replaceWith(obj);
+            }
+          };
+
+          swap();
+          let last = window.matchMedia(mq).matches;
+          window.addEventListener('resize', () => {
+            const now = window.matchMedia(mq).matches;
+            if (now !== last) {
+              last = now;
+              swap();
+            }
+          });
+        })();
+      </script>
 
     <script>
       (() => {
