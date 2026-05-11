@@ -15,6 +15,7 @@
   --shadow: 0 24px 60px rgba(13, 38, 24, 0.16);
   --radius: 22px;
   --radius-lg: 28px;
+  --hero-overlay: rgba(9, 18, 12, 0.4);
   font-family: "Poppins", "Segoe UI", sans-serif;
 }
 
@@ -46,9 +47,25 @@ body {
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  html,
+  body {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Evita que el header sticky tapee secciones al navegar por anclas */
+#inicio,
+#productores,
+#como,
+#acerca {
+  scroll-margin-top: 96px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
   .reveal {
     opacity: 0;
     transform: translate3d(0, 18px, 0);
+    will-change: transform, opacity;
     transition:
       opacity 520ms cubic-bezier(0.2, 0.8, 0.2, 1),
       transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -90,7 +107,8 @@ a {
   position: sticky;
   top: 0;
   z-index: 10;
-  backdrop-filter: blur(12px);
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
   background: linear-gradient(
     180deg,
     rgba(244, 247, 242, 0.96) 0%,
@@ -124,7 +142,7 @@ a {
 .brand {
   display: flex;
   align-items: center;
-  gap: 0px;
+  gap: 6px;
   font-weight: bold;
   color: #1b4332; 
   font-size: 1.3rem;
@@ -132,8 +150,8 @@ a {
 }
 
 .brand-mark {
-  width: 75px;
-  height: 75px;
+  width: 64px;
+  height: 64px;
   background: transparent;
   display: grid;
   place-items: center;
@@ -213,10 +231,8 @@ a {
 
 .hero {
   padding: 90px 0 120px;
-  background-image: linear-gradient(
-      rgba(9, 18, 12, 0.46),
-      rgba(9, 18, 12, 0.4)
-    ),
+  background-image:
+    linear-gradient(var(--hero-overlay), rgba(9, 18, 12, 0.32)),
     url("assets/finca-espinoza.png");
   background-size: cover;
   background-position: 35% center;
@@ -240,9 +256,11 @@ a {
   content: "";
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(60px);
   opacity: 0.5;
   z-index: 0;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
 }
 
 .hero::before {
@@ -340,12 +358,13 @@ h1 span {
 .ndvi-card {
   width: min(480px, 100%);
   background: rgba(10, 18, 12, 0.45);
-  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 24px;
   padding: 14px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
   animation: float 6s ease-in-out infinite;
+  will-change: transform;
+  margin: 0 auto;
 }
 
 .ndvi-image {
@@ -581,7 +600,7 @@ h1 span {
   align-items: center;
   justify-content: center;
   height: 570px;
-  width: 110%;
+  width: 100%;
 }
 
 .zones-media img,
@@ -661,6 +680,16 @@ h1 span {
 .steps-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.carousel {
+  position: relative;
+  min-width: 0;
+}
+
+.carousel-track {
+  display: grid;
   gap: 16px;
 }
 
@@ -830,9 +859,11 @@ h1 span {
   width: 340px;
   height: 340px;
   border-radius: 50%;
-  filter: blur(90px);
+  filter: blur(70px);
   opacity: 0.5;
   pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
 }
 
 .about::before {
@@ -1115,6 +1146,43 @@ h1 span {
   }
 }
 
+@media (max-width: 820px) {
+  .nav-inner {
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+  }
+
+  .brand {
+    font-size: 1.15rem;
+  }
+
+  .brand-mark {
+    width: 56px;
+    height: 56px;
+  }
+
+  .hero {
+    padding: 78px 0 96px;
+    background-position: 50% 35%;
+  }
+
+  .hero-inner {
+    gap: 28px;
+  }
+
+  .hero-left {
+    max-width: 520px;
+  }
+
+  .ndvi-card {
+    width: min(520px, 100%);
+  }
+
+  .zones-media {
+    height: 480px;
+  }
+}
+
 @media (max-width: 640px) {
   .hero-actions {
     flex-direction: column;
@@ -1129,17 +1197,251 @@ h1 span {
     background-position: center;
   }
 
+  .hero-inner {
+    gap: 20px;
+    grid-template-columns: 1fr;
+  }
+
+  .hero-left {
+    max-width: 100%;
+  }
+
   .feature-strip {
     padding: 16px;
     margin-top: -24px;
   }
 
-  .zones-media {
-    order: -1;
-  }
-
   .zones-legend {
     position: static;
     margin-top: 12px;
+  }
+
+  .carousel-track,
+  .steps-grid,
+  .about-grid {
+    width: 100%;
+    grid-template-columns: unset;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(260px, 90%);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    padding: 2px 16px 8px 2px;
+    scroll-padding-left: 2px;
+  }
+
+  .carousel-track > * {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .carousel-track::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .carousel-track::-webkit-scrollbar-thumb {
+    background: rgba(31, 122, 59, 0.22);
+    border-radius: 999px;
+  }
+
+  .carousel {
+    position: relative;
+  }
+
+  .carousel::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 46px;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(244, 247, 242, 0), var(--bg) 70%);
+    pointer-events: none;
+  }
+
+  .ndvi-image {
+    aspect-ratio: 16 / 9;
+  }
+
+  .ndvi-image img {
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero .container {
+    padding: 0 20px;
+  }
+  .container {
+    padding: 0 18px;
+  }
+
+  .nav {
+    padding: 2px 0;
+  }
+
+  .nav-inner {
+    grid-template-columns: 1fr auto;
+  }
+
+  .brand {
+    font-size: 1.05rem;
+  }
+
+  .brand-mark {
+    width: 48px;
+    height: 48px;
+  }
+
+  .nav-cta .button.small {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .nav-cta {
+    justify-self: end;
+  }
+
+  .button.primary {
+    width: 100%;
+  }
+
+  .hero {
+    padding: 96px 0 86px;
+    background-image:
+      linear-gradient(rgba(9, 18, 12, 0.58), rgba(9, 18, 12, 0.35)),
+      url("assets/finca-espinoza.png");
+  }
+
+  .hero-inner {
+    justify-items: stretch;
+    padding: 0;
+  }
+
+  .hero-left,
+  .hero-right {
+    width: 100%;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 8vw, 2.6rem);
+  }
+
+  .lead {
+    font-size: 1rem;
+  }
+
+  .hero-note {
+    border-radius: 16px;
+    padding: 12px 14px;
+  }
+
+  .ndvi-card {
+    width: min(360px, 100%);
+  }
+
+  .feature-strip {
+    margin-top: -20px;
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .strip-card {
+    align-items: flex-start;
+  }
+
+  .zones {
+    gap: 24px;
+  }
+
+  .zones-panel {
+    padding: 18px;
+  }
+
+  .zones-media {
+    height: auto;
+    padding: 12px;
+    overflow: visible;
+    background: linear-gradient(160deg, #f2f7fb 0%, #e2eef7 100%);
+    display: grid;
+    gap: 12px;
+    justify-items: center;
+  }
+
+  .zones-media img,
+  .zones-media .zones-map {
+    width: 100%;
+    height: auto;
+    max-height: none;
+  }
+
+  .zones-legend {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+    font-size: 0.8rem;
+  }
+
+  .zones-legend strong {
+    grid-column: 1 / -1;
+  }
+
+
+@media (max-width: 420px) {
+  .zones-media {
+    padding: 10px;
+    border-radius: 22px;
+  }
+
+  .zones-media .zones-map {
+    height: 240px;
+    max-height: 240px;
+    max-width: 280px;
+    object-fit: contain;
+    object-position: center;
+    transform: none;
+    transform-origin: center;
+  }
+
+  .zones-legend {
+    padding: 10px 12px;
+  }
+}
+  .steps {
+    margin: 36px 0;
+  }
+
+  .steps-header {
+    text-align: left;
+  }
+
+  .step-card,
+  .about-card {
+    padding: 16px;
+  }
+
+  .about {
+    padding: 34px 20px 40px;
+  }
+
+  .about-strip {
+    padding: 12px;
+  }
+
+  .about-strip-item {
+    padding: 10px;
+  }
+
+  .about-closer {
+    flex-direction: column;
+  }
+
+  .footer-inner {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
