@@ -106,34 +106,27 @@ Debes definir `POLIMILPA_USERS_JSON` con credenciales seguras. Si no existe, el 
 - `POST /v1/recommendations`
 - `POST /v1/recommendations/auto`
 
-## Demo publico (Streamlit)
+## Frontend moderno (Next.js)
 
-1. Cargar caso demo inicial en PostgreSQL:
+La plataforma puede convivir con un frontend en Next.js sin dejar Python. El backend FastAPI sigue siendo la fuente de datos y autenticación.
 
 ```fish
-psql -p 5432 -d polimilpa -U katy -f scripts/seed_public_demo_cases.sql
+cd web
+npm install
+set -x NEXT_PUBLIC_API_BASE_URL http://127.0.0.1:8000
+npm run dev
 ```
 
-Este seed carga dos casos publicos de demo: `espinoza-001` y `las-flores-002`.
+Si quieres abrir la landing desde el frontend, usa el enlace superior o navega a:
 
-2. Verificar que el endpoint publico ya devuelve datos:
-
-```fish
-curl http://127.0.0.1:8000/v1/demo/cases
+```text
+file:///Users/katy/Proyectos/agroni/landing/index.html
 ```
 
-3. Levantar interfaz Streamlit:
+Si quieres cambiar el origen permitido para desarrollo, define:
 
 ```fish
-source .venv/bin/activate.fish
-streamlit run streamlit_app.py
-```
-
-Opcional para apuntar Streamlit a otra URL de API:
-
-```fish
-set -x POLIMILPA_API_URL http://127.0.0.1:8000
-streamlit run streamlit_app.py
+set -x FRONTEND_URL http://localhost:3000
 ```
 
 ## Pruebas

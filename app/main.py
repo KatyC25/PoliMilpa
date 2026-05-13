@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from dotenv import load_dotenv
 import jwt
@@ -28,6 +29,15 @@ from app.services.rules_engine import recommend
 load_dotenv()
 
 app = FastAPI(title=settings.app_name, version=settings.app_version)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.frontend_url],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 gee_client = GEEClient()
 c3s_client = C3SClient()
 ml_service = MLService()
