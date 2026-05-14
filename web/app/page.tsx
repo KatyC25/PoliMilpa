@@ -1,151 +1,124 @@
-import { fetchDemoCases } from "../lib/api";
+import Image from "next/image";
 
-const landingUrl = "file:///Users/katy/Proyectos/agroni/landing/index.html";
+const brandLogo = "/assets/logo-polimilpa.png";
+const nicaraguaMap = "/assets/nicaragua.svg";
 
 const zoneGroups = [
 	{
-		title: "Norte",
-		climate: "Húmedo de altura",
-		zones: ["Jinotega", "Matagalpa", "Nueva Segovia", "Madriz"],
+		title: "Zona Norte (Húmeda)",
+		description: "Alta humedad y lluvias abundantes.",
+		icon: "fa-cloud-rain",
 		color: "green",
 	},
 	{
-		title: "Centro",
-		climate: "Transición",
-		zones: ["Boaco", "Carazo", "Chontales", "Estelí"],
+		title: "Zona Centro (Subhúmeda)",
+		description: "Humedad moderada y lluvias estacionales.",
+		icon: "fa-cloud-sun",
 		color: "amber",
 	},
 	{
-		title: "Occidente",
-		climate: "Corredor seco",
-		zones: ["Chinandega", "León", "Granada", "Managua"],
-		color: "red",
+		title: "Zona Occidente (Seca)",
+		description: "Menor humedad y lluvias escasas.",
+		icon: "fa-sun",
+		color: "orange",
 	},
 	{
-		title: "Sur",
-		climate: "Subhúmedo",
-		zones: ["Rivas", "Río San Juan", "Masaya", "Atlántico Sur"],
-		color: "lime",
+		title: "Zona Sur (Muy seca)",
+		description: "Condiciones secas y altas temperaturas.",
+		icon: "fa-solid fa-temperature-high",
+		color: "red",
 	},
 ];
 
 const legendItems = [
-	{ label: "Húmedo de altura", color: "#16a34a" },
-	{ label: "Subhúmedo", color: "#facc15" },
-	{ label: "Transición", color: "#fb923c" },
-	{ label: "Corredor seco", color: "#ef4444" },
+	{ label: "Zona Norte (Húmeda)", color: "#56b34f" },
+	{ label: "Zona Centro (Subhúmeda)", color: "#f2c94c" },
+	{ label: "Zona Occidente (Seca)", color: "#f2994a" },
+	{ label: "Zona Sur (Muy seca)", color: "#eb5757" },
 ];
 
-export default async function Home() {
-	const demoCases = await fetchDemoCases();
-
+export default function Home() {
 	return (
-		<main className="page-shell">
+		<main className="app-shell" id="inicio">
 			<header className="topbar">
-				<a className="brand brand-link" href={landingUrl}>
-					<div className="brand-mark" aria-hidden="true">
-						<span />
-						<span />
-						<span />
-					</div>
-					<div>
-						<div className="brand-name">PoliMilpa</div>
-						<div className="brand-subtitle">
-							Datos climáticos y satelitales para decidir mejor
-						</div>
-					</div>
+				<a className="brand" href="#inicio" aria-label="PoliMilpa">
+					<Image
+						className="brand-logo"
+						src={brandLogo}
+						alt="PoliMilpa"
+						width={44}
+						height={44}
+						priority
+					/>
+					<span className="brand-name">PoliMilpa</span>
 				</a>
 
-				<nav className="nav-links" aria-label="Principal">
-					<a className="active" href="#inicio">
-						Inicio
-					</a>
-					<a href="#productores">Productores</a>
-					<a href={landingUrl}>Landing</a>
+				<nav className="topnav" aria-label="Principal">
+					<a href="#inicio">Inicio</a>
+					<a href="#zonas">Productores</a>
 				</nav>
 
-				<a className="login-link" href={landingUrl}>
-					Volver a la landing
+				<a className="primary-button" href="#zonas">
+					Iniciar sesión
 				</a>
 			</header>
 
-			<section className="hero" id="inicio">
-				<div className="hero-copy">
-					<p className="eyebrow">Selecciona tu zona</p>
-					<h1>Elige la región donde te encuentras en el mapa o en la lista</h1>
-					<p className="hero-text">
-						Estas zonas se basan en datos climáticos y satelitales de
-						Copernicus.
+			<section className="platform-grid" id="zonas">
+				<div className="zone-panel">
+					<p className="section-kicker">Selecciona tu zona</p>
+					<h2>Elige la región donde te encuentras</h2>
+					<p className="section-copy">
+						Elige la región en el mapa o en la lista.
 					</p>
 
-					<div className="group-list" aria-label="Zonas agroclimáticas">
+					<section className="zone-list" aria-label="Zonas agroclimáticas">
 						{zoneGroups.map((group) => (
-							<article
-								className={`group-card ${group.color}`}
-								key={group.title}
-							>
-								<div className="group-header">
-									<h2>{group.title}</h2>
-									<span>{group.climate}</span>
+							<article className="zone-card" key={group.title}>
+								<div className={`zone-icon ${group.color}`} aria-hidden="true">
+									<i className={`fa-solid ${group.icon}`} />
 								</div>
-								<ul>
-									{group.zones.map((zone) => (
-										<li key={zone}>{zone}</li>
-									))}
-								</ul>
+								<div className="zone-copy">
+									<h2>{group.title}</h2>
+									<p>{group.description}</p>
+								</div>
+								<i
+									className="fa-solid fa-chevron-right zone-chevron"
+									aria-hidden="true"
+								/>
 							</article>
 						))}
-					</div>
+					</section>
 				</div>
 
-				<aside className="map-panel" aria-label="Mapa de zonas agroclimáticas">
-					<div className="legend">
-						{legendItems.map((item) => (
-							<div className="legend-item" key={item.label}>
-								<span style={{ backgroundColor: item.color }} />
-								<small>{item.label}</small>
-							</div>
-						))}
-					</div>
+				<section
+					className="map-panel"
+					aria-label="Mapa de zonas agroclimáticas"
+				>
+					<div className="map-frame">
+						<div className="map-bg" aria-hidden="true" />
+						<object
+							className="map-object"
+							data={nicaraguaMap}
+							type="image/svg+xml"
+							aria-label="Mapa de Nicaragua con zonas agroclimáticas"
+						>
+							Mapa de Nicaragua con zonas agroclimáticas
+						</object>
 
-					<div className="map-card">
-						<div className="map-placeholder">
-							<div className="map-island north" />
-							<div className="map-island center" />
-							<div className="map-island west" />
-							<div className="map-island south" />
-							<p>Mapa interactivo de Nicaragua</p>
+						<div className="map-legend">
+							<strong>Zonas agroclimáticas</strong>
+							{legendItems.map((item) => (
+								<div className="legend-row" key={item.label}>
+									<span
+										style={{ backgroundColor: item.color }}
+										aria-hidden="true"
+									/>
+									<small>{item.label}</small>
+								</div>
+							))}
 						</div>
 					</div>
-
-					<p className="mobile-hint">Presiona sobre el mapa tu zona</p>
-				</aside>
-			</section>
-
-			<section className="demo-strip" id="productores">
-				<div className="demo-strip-header">
-					<p className="eyebrow">Demo público</p>
-					<h2>Casos listos para revisar</h2>
-				</div>
-
-				<div className="demo-grid">
-					{demoCases.length > 0 ? (
-						demoCases.slice(0, 3).map((item) => (
-							<article className="demo-card" key={item.case_code}>
-								<strong>{item.title}</strong>
-								<p>
-									{item.department} · {item.municipality}
-								</p>
-								<small>{item.agro_zone}</small>
-							</article>
-						))
-					) : (
-						<article className="demo-card muted">
-							<strong>No hay casos demo disponibles aún</strong>
-							<p>La interfaz ya está conectada al backend FastAPI.</p>
-						</article>
-					)}
-				</div>
+				</section>
 			</section>
 		</main>
 	);
