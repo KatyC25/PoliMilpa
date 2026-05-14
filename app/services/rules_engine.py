@@ -28,73 +28,96 @@ ZONE_CATALOG = {
 }
 
 DEPARTMENT_ZONE_HINTS = {
-    AgroZone.DRY_CORRIDOR: {
-        "chinandega",
-        "leon",
-        "managua",
-        "masaya",
-        "granada",
-        "rivas",
-        "madriz",
-    },
+    # Z1: Verde, Humedo de Altura
     AgroZone.HIGHLAND_HUMID: {
         "jinotega",
         "matagalpa",
     },
+    # Z2: Amarillo, Caribe Subhumedo
     AgroZone.SUBHUMID_CARIBBEAN: {
         "raccn",
         "raccs",
         "rio san juan",
     },
-    AgroZone.TRANSITION: {
-        "carazo",
-        "boaco",
-        "chontales",
+    # Z3: Rojo, Corredor Seco
+    AgroZone.DRY_CORRIDOR: {
+        "madriz",
         "esteli",
         "nueva segovia",
+        "leon",
+        "chinandega",
+    },
+    # Z4: Naranja, Zona de Transicion
+    AgroZone.TRANSITION: {
+        "managua",
+        "masaya",
+        "granada",
+        "carazo",
+        "rivas",
+        "boaco",
+        "chontales",
     },
 }
 
 MUNICIPALITY_ZONE_HINTS = {
-    AgroZone.DRY_CORRIDOR: {
-        "chinandega",
-        "el viejo",
-        "leon",
-        "nagarote",
-        "la paz centro",
-        "managua",
-        "tipitapa",
-        "masaya",
-        "nindiri",
-        "granada",
-        "rivas",
-        "belen",
-    },
+    # Z1: Jinotega y Matagalpa
     AgroZone.HIGHLAND_HUMID: {
         "jinotega",
         "san rafael del norte",
+        "wiwili de jinotega",
         "matagalpa",
-        "la dahlia",
+        "la dalia",
+        "sebaco",
     },
+    # Z2: RACCN, RACCS, Rio San Juan
     AgroZone.SUBHUMID_CARIBBEAN: {
-        "bluefields",
-        "bilwi",
         "puerto cabezas",
-        "siuna",
         "waspan",
+        "siuna",
+        "bluefields",
         "el rama",
+        "nueva guinea",
         "san carlos",
+        "el castillo",
     },
+    # Z3: Madriz, Esteli, Nueva Segovia, Leon, Chinandega
+    AgroZone.DRY_CORRIDOR: {
+        "somoto",
+        "palacaguina",
+        "esteli",
+        "condega",
+        "ocotal",
+        "jalapa",
+        "leon",
+        "nagarote",
+        "la paz centro",
+        "chinandega",
+        "el viejo",
+        "somotillo",
+    },
+    # Z4: Managua, Masaya, Granada, Carazo, Rivas, Boaco, Chontales
     AgroZone.TRANSITION: {
+        "managua",
+        "tipitapa",
+        "mateare",
+        "masaya",
+        "nindiri",
+        "catarina",
+        "granada",
+        "diriomo",
+        "nandaime",
         "jinotepe",
         "diriamba",
-        "mombacho",
+        "san marcos",
+        "rivas",
+        "san juan del sur",
+        "belen",
         "boaco",
         "camoapa",
+        "teustepe",
         "juigalpa",
-        "esteli",
-        "somoto",
-        "ocotal",
+        "acoyapa",
+        "santo tomas",
     },
 }
 

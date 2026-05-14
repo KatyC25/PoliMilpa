@@ -5,36 +5,36 @@ const nicaraguaMap = "/assets/nicaragua.svg";
 
 const zoneGroups = [
 	{
-		title: "Zona Norte (Húmeda)",
-		description: "Alta humedad y lluvias abundantes.",
+		title: "Húmedo de altura",
+		description: "Clima fresco con humedad sostenida.",
 		icon: "fa-cloud-rain",
 		color: "green",
 	},
 	{
-		title: "Zona Centro (Subhúmeda)",
-		description: "Humedad moderada y lluvias estacionales.",
+		title: "Caribe subhúmedo",
+		description: "Lluvias frecuentes con humedad moderada.",
 		icon: "fa-cloud-sun",
 		color: "amber",
 	},
 	{
-		title: "Zona Occidente (Seca)",
-		description: "Menor humedad y lluvias escasas.",
+		title: "Corredor seco",
+		description: "Baja humedad y temporadas de sequia.",
 		icon: "fa-sun",
-		color: "orange",
+		color: "red",
 	},
 	{
-		title: "Zona Sur (Muy seca)",
-		description: "Condiciones secas y altas temperaturas.",
-		icon: "fa-solid fa-temperature-high",
-		color: "red",
+		title: "Zona de transicion",
+		description: "Condiciones mixtas entre seco y humedo.",
+		icon: "fa-shuffle",
+		color: "orange",
 	},
 ];
 
 const legendItems = [
-	{ label: "Zona Norte (Húmeda)", color: "#56b34f" },
-	{ label: "Zona Centro (Subhúmeda)", color: "#f2c94c" },
-	{ label: "Zona Occidente (Seca)", color: "#f2994a" },
-	{ label: "Zona Sur (Muy seca)", color: "#eb5757" },
+	{ label: "Humedo de altura", color: "#56b34f" },
+	{ label: "Caribe subhumedo", color: "#f2c94c" },
+	{ label: "Corredor seco", color: "#eb5757" },
+	{ label: "Zona de transicion", color: "#f2994a" },
 ];
 
 export default function Home() {
