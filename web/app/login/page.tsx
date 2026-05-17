@@ -1,8 +1,47 @@
+"use client";
+
 import Image from "next/image";
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../../lib/auth-context";
 
 const brandLogo = "/assets/logo-polimilpa.png";
 
 export default function LoginPage() {
+	const router = useRouter();
+	const { login, user, loading } = useAuth();
+	const [username, setUsername] = useState("");
+	const [password, setPassword] = useState("");
+	const [error, setError] = useState("");
+	const [submitting, setSubmitting] = useState(false);
+
+	if (loading) {
+		return (
+			<main className="login-shell" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+				<p>Cargando...</p>
+			</main>
+		);
+	}
+
+	if (user) {
+		router.replace("/dashboard");
+		return null;
+	}
+
+	const handleSubmit = async (e: FormEvent) => {
+		e.preventDefault();
+		setError("");
+		setSubmitting(true);
+		try {
+			await login(username, password);
+			router.push("/dashboard");
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Error al iniciar sesión");
+		} finally {
+			setSubmitting(false);
+		}
+	};
+
 	return (
 		<main className="login-shell">
 			<section className="login-layout" aria-label="Acceso PoliMilpa">
@@ -78,22 +117,33 @@ export default function LoginPage() {
 					</div>
 				</div>
 
-				<form className="login-panel">
+				<form className="login-panel" onSubmit={handleSubmit}>
 					<div className="login-panel-head">
 						<h2>Iniciar sesión</h2>
 						<p>Acceso para técnicos y equipo PoliMilpa</p>
 					</div>
 
+					{error && (
+						<div className="login-error">
+							<i className="fa-solid fa-circle-exclamation" />
+							<span>{error}</span>
+						</div>
+					)}
+
 					<label className="login-field">
-						<span>Correo</span>
+						<span>Usuario</span>
 
 						<div className="login-input-wrap">
-							<i className="fa-regular fa-envelope" aria-hidden="true" />
+							<i className="fa-regular fa-user" aria-hidden="true" />
 
 							<input
-								type="email"
-								name="email"
-								placeholder="correo@ejemplo.com"
+								type="text"
+								name="username"
+								placeholder="usuario"
+								value={username}
+								onChange={(e) => setUsername(e.target.value)}
+								required
+								autoFocus
 							/>
 						</div>
 					</label>
@@ -104,20 +154,31 @@ export default function LoginPage() {
 						<div className="login-input-wrap login-password-wrap">
 							<i className="fa-solid fa-lock" aria-hidden="true" />
 
-							<input type="password" name="password" placeholder="••••••••••" />
+							<input
+								type="password"
+								name="password"
+								placeholder="••••••••••"
+								value={password}
+								onChange={(e) => setPassword(e.target.value)}
+								required
+							/>
 
 							<button
 								type="button"
 								className="login-eye"
 								aria-label="Mostrar contraseña"
+								onClick={(e) => {
+									const input = (e.currentTarget.parentElement!.querySelector("input")!);
+									input.type = input.type === "password" ? "text" : "password";
+								}}
 							>
 								<i className="fa-regular fa-eye" aria-hidden="true" />
 							</button>
 						</div>
 					</label>
 
-					<button type="button" className="login-submit">
-						<span>Iniciar sesión</span>
+					<button type="submit" className="login-submit" disabled={submitting}>
+						<span>{submitting ? "Entrando..." : "Iniciar sesión"}</span>
 
 						<i className="fa-solid fa-arrow-right" aria-hidden="true" />
 					</button>
