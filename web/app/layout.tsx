@@ -6,6 +6,9 @@ import { AuthProvider } from "../lib/auth-context";
 export const metadata: Metadata = {
 	title: "PoliMilpa",
 	description: "Plataforma agroclimática de Nicaragua",
+	icons: {
+		icon: "/assets/favicon.png",
+	},
 };
 
 export default function RootLayout({

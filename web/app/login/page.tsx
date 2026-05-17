@@ -46,7 +46,7 @@ export default function LoginPage() {
 		<main className="login-shell">
 			<section className="login-layout" aria-label="Acceso PoliMilpa">
 				<div className="login-hero">
-					<div className="login-branding">
+					<a className="login-branding" href="http://127.0.0.1:5500/landing/">
 						<div className="login-brand-mark">
 							<Image
 								src={brandLogo}
@@ -59,7 +59,7 @@ export default function LoginPage() {
 						</div>
 
 						<span className="login-brand-name">PoliMilpa</span>
-					</div>
+					</a>
 
 					<div className="login-hero-copy">
 						<h1>

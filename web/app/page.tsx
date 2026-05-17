@@ -182,7 +182,7 @@ export default function Home() {
   return (
     <main className="app-shell" id="inicio">
       <header className="topbar">
-        <a className="brand" href="#inicio" aria-label="PoliMilpa">
+        <a className="brand" href="http://127.0.0.1:5500/landing/" aria-label="PoliMilpa">
           <Image className="brand-logo" src={brandLogo} alt="PoliMilpa" width={44} height={44} priority />
           <span className="brand-name">PoliMilpa</span>
         </a>
