@@ -25,6 +25,9 @@ class ParcelInput(BaseModel):
         ..., ge=0, le=1, description="0 saludable, 1 estres alto"
     )
     seasonal_forecast: str = Field(..., description="dry, normal o wet")
+    msavi2: float = Field(
+        default=0.0, ge=-1, le=1, description="Índice MSAVI2 crudo de Sentinel-2"
+    )
 
 
 class AutoParcelInput(BaseModel):
@@ -66,6 +69,7 @@ class FarmerBase(BaseModel):
     agro_zone: AgroZone
     lat: Optional[float] = None
     lon: Optional[float] = None
+    geometry: Optional[str] = None
     technician_username: Optional[str] = None
 
 
@@ -82,6 +86,7 @@ class FarmerUpdate(BaseModel):
     agro_zone: Optional[AgroZone] = None
     lat: Optional[float] = None
     lon: Optional[float] = None
+    geometry: Optional[str] = None
     technician_username: Optional[str] = None
     is_active: Optional[bool] = None
 
@@ -97,6 +102,7 @@ class FarmerResponse(BaseModel):
     agro_zone: AgroZone
     lat: Optional[float] = None
     lon: Optional[float] = None
+    geometry: Optional[str] = None
     technician_username: str
     is_active: bool
 
@@ -116,6 +122,50 @@ class RecommendationResponse(BaseModel):
     advisory_text: str
     debug_scores: Optional[Dict[str, Union[float, str]]] = None
     data_source: Optional[str] = None
+
+
+class MapTileInput(BaseModel):
+    parcel_id: str
+    lat: float
+    lon: float
+    geometry: Optional[str] = None
+
+
+class MapTileResponse(BaseModel):
+    url: str
+    center: list[float]
+    zoom: int = 16
+
+
+class ZoneInfoResponse(BaseModel):
+    zone_id: str
+    title: str
+    subtitle: str
+    main_crop: Dict[str, object]
+    alt_crop: Dict[str, object]
+    actions: List[Dict[str, str]]
+    weather: Dict[str, object]
+
+
+class AIAdvisoryInput(BaseModel):
+    parcel_id: str
+    traffic_light: str
+    global_score: float
+    rent_crop: str
+    food_crop: str
+    window: str
+    msavi2: float
+    slope_percent: float
+    soil_moisture: float
+    seasonal_forecast: str
+    zone: str
+    department: str
+    municipality: str
+
+
+class AIAdvisoryResponse(BaseModel):
+    advisory: str
+    whatsapp_preview: str
 
 
 class PublicDemoCaseResponse(BaseModel):

@@ -1,7 +1,11 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from dotenv import load_dotenv
+
+load_dotenv()
+
 import jwt
 from sqlalchemy.orm import Session
 
@@ -9,24 +13,28 @@ from app.config import settings
 from app.db import get_db
 from app.models import Farmer, PublicDemoCase
 from app.schemas import (
+    AIAdvisoryInput,
+    AIAdvisoryResponse,
     AutoParcelInput,
     FarmerCreate,
     FarmerResponse,
     FarmerUpdate,
     LoginInput,
+    MapTileInput,
+    MapTileResponse,
     ParcelInput,
     PublicDemoCaseResponse,
     RecommendationResponse,
     TokenResponse,
     UserResponse,
+    ZoneInfoResponse,
 )
+from app.services.ai_service import ai_service
 from app.services.auth_service import AuthService, UserIdentity
 from app.services.c3s_client import C3SClient
 from app.services.gee_client import GEEClient
 from app.services.ml_service import MLService
 from app.services.rules_engine import recommend
-
-load_dotenv()
 
 app = FastAPI(title=settings.app_name, version=settings.app_version)
 
@@ -87,6 +95,7 @@ def _farmer_to_response(farmer: Farmer) -> FarmerResponse:
         agro_zone=farmer.agro_zone,
         lat=farmer.lat,
         lon=farmer.lon,
+        geometry=farmer.geometry,
         technician_username=farmer.technician_username,
         is_active=farmer.is_active,
     )
@@ -207,6 +216,7 @@ def create_farmer(
         agro_zone=payload.agro_zone.value,
         lat=payload.lat,
         lon=payload.lon,
+        geometry=payload.geometry,
         technician_username=assigned_technician,
         is_active=True,
     )
@@ -300,6 +310,8 @@ def update_farmer(
         farmer.lat = payload.lat
     if payload.lon is not None:
         farmer.lon = payload.lon
+    if payload.geometry is not None:
+        farmer.geometry = payload.geometry
     if payload.is_active is not None:
         farmer.is_active = payload.is_active
 
@@ -343,18 +355,37 @@ def generate_auto_recommendation(
 ) -> RecommendationResponse:
     del user
     try:
-        seasonal_forecast = c3s_client.get_seasonal_forecast(
-            lat=payload.lat,
-            lon=payload.lon,
-        )
-        seasonal_source = "c3s"
+        use_c3s = payload.seasonal_forecast is None
+        seasonal_source = "manual" if not use_c3s else "c3s"
+        seasonal_forecast = payload.seasonal_forecast
 
-        features = gee_client.get_parcel_features(
-            lat=payload.lat,
-            lon=payload.lon,
-            agro_zone=payload.agro_zone,
-            seasonal_forecast=seasonal_forecast,
-        )
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            gee_future = pool.submit(
+                gee_client.get_parcel_features,
+                lat=payload.lat,
+                lon=payload.lon,
+                agro_zone=payload.agro_zone,
+                seasonal_forecast=seasonal_forecast or "normal",
+            )
+            if use_c3s:
+                c3s_future = pool.submit(
+                    c3s_client.get_seasonal_forecast,
+                    lat=payload.lat,
+                    lon=payload.lon,
+                )
+
+            futures = [gee_future]
+            if use_c3s:
+                futures.append(c3s_future)
+
+            for future in as_completed(futures):
+                exc = future.exception()
+                if exc is not None:
+                    raise exc
+
+            features = gee_future.result()
+            if use_c3s:
+                seasonal_forecast = c3s_future.result()
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
@@ -368,6 +399,7 @@ def generate_auto_recommendation(
         shade_index=features["shade_index"],
         stress_index=features["stress_index"],
         seasonal_forecast=seasonal_forecast,
+        msavi2=features.get("msavi2", 0.0),
     )
 
     result = recommend(rules_payload)
@@ -383,6 +415,130 @@ def generate_auto_recommendation(
     result["debug_scores"]["s2_dataset"] = features.get("s2_dataset", "unknown")
     result["debug_scores"]["s2_index"] = features.get("s2_index", "unknown")
     result["debug_scores"]["dem_dataset"] = features.get("dem_dataset", "unknown")
+    result["debug_scores"]["msavi2"] = features.get("msavi2", 0.0)
+    result["debug_scores"]["slope_percent"] = features["slope_percent"]
+    result["debug_scores"]["soil_moisture"] = features["soil_moisture"]
+    result["debug_scores"]["shade_index"] = features["shade_index"]
+    result["debug_scores"]["stress_index"] = features["stress_index"]
     result["data_source"] = features.get("source", "unknown")
 
     return RecommendationResponse(**result)
+
+
+@app.post("/v1/recommendations/auto/map", response_model=MapTileResponse)
+def generate_recommendation_map_tiles(
+    payload: MapTileInput,
+    user: UserIdentity = Depends(require_roles("superadmin", "admin", "tecnico")),
+) -> MapTileResponse:
+    del user
+    tile = gee_client.get_classification_tile(
+        lat=payload.lat,
+        lon=payload.lon,
+        agro_zone="transition",
+        geometry=payload.geometry,
+    )
+    if tile is None:
+        raise HTTPException(
+            status_code=503,
+            detail="No se pudo generar el mapa de clasificacion. Verifica GEE.",
+        )
+    return MapTileResponse(url=tile["url"], center=tile["center"], zoom=16)
+
+
+_ZONE_INFO = {
+    "norte": {
+        "title": "Z1 — Húmedo de Altura",
+        "subtitle": "Jinotega, Matagalpa",
+        "main_crop": {"name": "Café", "status": "Recomendado", "description": "Clima fresco y húmedo ideal para café de altura.", "benefits": ["Excelente calidad de taza", "Alta producción esperada"]},
+        "alt_crop": {"name": "Maíz", "status": "Alternativa", "description": "Cultivo tradicional con buena adaptación.", "benefits": []},
+        "actions": [
+            {"icon": "fa-tree", "title": "Sembrar con sombra", "description": "Mantener árboles de sombra para regular temperatura."},
+            {"icon": "fa-leaf", "title": "Fertilización orgánica", "description": "Aplicar abono orgánico al inicio de lluvias."},
+            {"icon": "fa-droplet", "title": "Monitorear drenaje", "description": "Evitar encharcamientos en épocas lluviosas."},
+        ],
+        "weather": {"title": "Lluvias regulares", "forecast": "Condiciones favorables para la siembra.", "days": [
+            {"day": "Hoy", "icon": "fa-cloud-rain", "temp": "24°/18°"},
+            {"day": "Mar", "icon": "fa-cloud-rain", "temp": "25°/18°"},
+            {"day": "Mié", "icon": "fa-cloud-rain", "temp": "24°/18°"},
+            {"day": "Jue", "icon": "fa-cloud", "temp": "25°/18°"},
+            {"day": "Vie", "icon": "fa-sun", "temp": "26°/19°"},
+        ], "note": "Temporada de lluvias estable."},
+    },
+    "sur": {
+        "title": "Z2 — Corredor Seco",
+        "subtitle": "Madriz, Estelí, N. Segovia, León, Chinandega",
+        "main_crop": {"name": "Sorgo", "status": "Recomendado", "description": "Cultivo resistente a sequía con bajo requerimiento hídrico.", "benefits": ["Alta resistencia", "Bajo consumo de agua"]},
+        "alt_crop": {"name": "Frijol caupí", "status": "Alternativa", "description": "Leguminosa tolerante a estrés hídrico.", "benefits": []},
+        "actions": [
+            {"icon": "fa-droplet", "title": "Riego complementario", "description": "Aplicar riego en momentos críticos."},
+            {"icon": "fa-leaf", "title": "Mulch", "description": "Cubrir suelo para retener humedad."},
+            {"icon": "fa-sun", "title": "Cosecha de agua", "description": "Captar agua de lluvia para riego."},
+        ],
+        "weather": {"title": "Sequía esperada", "forecast": "Planificar riego.", "days": [
+            {"day": "Hoy", "icon": "fa-sun", "temp": "28°/19°"},
+            {"day": "Mar", "icon": "fa-sun", "temp": "29°/20°"},
+            {"day": "Mié", "icon": "fa-sun", "temp": "29°/20°"},
+            {"day": "Jue", "icon": "fa-cloud-sun", "temp": "28°/19°"},
+            {"day": "Vie", "icon": "fa-sun", "temp": "30°/21°"},
+        ], "note": "Temperaturas altas, poca lluvia."},
+    },
+    "centro": {
+        "title": "Z3 — Caribe Subhúmedo",
+        "subtitle": "RACCN, RACCS, Río San Juan",
+        "main_crop": {"name": "Cacao", "status": "Recomendado", "description": "Humedad constante ideal para cacao.", "benefits": ["Excelente adaptación", "Suelo óptimo"]},
+        "alt_crop": {"name": "Yuca", "status": "Alternativa", "description": "Opción resistente y complementaria.", "benefits": []},
+        "actions": [
+            {"icon": "fa-leaf", "title": "Mantener humedad", "description": "Monitorear nivel de humedad del suelo."},
+            {"icon": "fa-droplet", "title": "Drenaje", "description": "Evitar exceso de agua."},
+            {"icon": "fa-tree", "title": "Sombra parcial", "description": "Establecer árboles de sombra."},
+        ],
+        "weather": {"title": "Lluvia frecuente", "forecast": "Muy favorable.", "days": [
+            {"day": "Hoy", "icon": "fa-cloud-rain", "temp": "26°/21°"},
+            {"day": "Mar", "icon": "fa-cloud-rain", "temp": "26°/21°"},
+            {"day": "Mié", "icon": "fa-cloud-rain", "temp": "25°/20°"},
+            {"day": "Jue", "icon": "fa-cloud-rain", "temp": "26°/21°"},
+            {"day": "Vie", "icon": "fa-cloud-sun", "temp": "27°/22°"},
+        ], "note": "Precipitaciones regulares."},
+    },
+    "occidente": {
+        "title": "Z4 — Zona de Transición",
+        "subtitle": "Managua, Masaya, Granada, Carazo, Rivas, Boaco, Chontales",
+        "main_crop": {"name": "Café", "status": "Recomendado", "description": "Condiciones mixtas con humedad moderada.", "benefits": ["Equilibrio humedad-temperatura", "Suelo fértil"]},
+        "alt_crop": {"name": "Frijol", "status": "Alternativa", "description": "Versátil, se adapta a condiciones variables.", "benefits": []},
+        "actions": [
+            {"icon": "fa-leaf", "title": "Monitorear humedad", "description": "Mantener equilibrio riego-drenaje."},
+            {"icon": "fa-tree", "title": "Agroforestería", "description": "Integrar árboles con cultivos."},
+            {"icon": "fa-droplet", "title": "Preparar variabilidad", "description": "Sistemas de riego y drenaje flexibles."},
+        ],
+        "weather": {"title": "Condiciones variables", "forecast": "Equilibrio lluvia-sequía.", "days": [
+            {"day": "Hoy", "icon": "fa-cloud-sun", "temp": "26°/19°"},
+            {"day": "Mar", "icon": "fa-cloud-rain", "temp": "25°/18°"},
+            {"day": "Mié", "icon": "fa-cloud-sun", "temp": "26°/19°"},
+            {"day": "Jue", "icon": "fa-sun", "temp": "27°/20°"},
+            {"day": "Vie", "icon": "fa-cloud-sun", "temp": "27°/19°"},
+        ], "note": "Transición con menos precipitaciones."},
+    },
+}
+
+
+@app.get("/v1/zones/{zone_id}", response_model=ZoneInfoResponse)
+def get_zone_info(zone_id: str) -> ZoneInfoResponse:
+    info = _ZONE_INFO.get(zone_id)
+    if info is None:
+        raise HTTPException(status_code=404, detail=f"Zona '{zone_id}' no encontrada")
+    return ZoneInfoResponse(zone_id=zone_id, **info)
+
+
+@app.post("/v1/recommendations/ai-advisory", response_model=AIAdvisoryResponse)
+def generate_ai_advisory(
+    payload: AIAdvisoryInput,
+    user: UserIdentity = Depends(require_roles("superadmin", "admin", "tecnico")),
+) -> AIAdvisoryResponse:
+    del user
+    result = ai_service.generate_advisory(payload)
+    if result is None:
+        raise HTTPException(
+            status_code=503,
+            detail="No se pudo generar advisory IA. Verifica GEMINI_API_KEY en .env",
+        )
+    return result
