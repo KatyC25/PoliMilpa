@@ -1370,6 +1370,10 @@ h1 span {
 }
 
 @media (max-width: 640px) {
+  .nav-cta {
+    display: none;
+  }
+
   .hero-actions {
     flex-direction: column;
     align-items: stretch;

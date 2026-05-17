@@ -35,13 +35,14 @@ const ZONE_COLORS: Record<string, string> = {
 
 const FALLBACK_REC: Record<string, any> = {
   norte: {
-    title: "Z1 — Húmedo de Altura", subtitle: "Condiciones para siembra",
-    main_crop: { name: "Café", status: "Recomendado", description: "Clima fresco ideal para café.", benefits: ["Excelente calidad"] },
-    alt_crop: { name: "Maíz", status: "Alternativa", description: "Cultivo tradicional.", benefits: [] },
-    actions: [
-      { icon: "fa-tree", title: "Sembrar con sombra", description: "Regular temperatura con sombra." },
-      { icon: "fa-leaf", title: "Fertilización", description: "Abono orgánico al inicio." },
-    ],
+    title: "Z1 — Húmedo de Altura",
+    subtitle: "Jinotega, Matagalpa",
+    temp_range: "18° – 28°C",
+    rainfall: "1200 – 2000 mm/año",
+    season: "Mayo – Julio",
+    rainy_season: "Mayo – Octubre",
+    rent_crop: "Café",
+    food_crop: "Maíz",
     weather: { title: "Lluvias regulares", forecast: "Favorable.", days: [
       { day: "Hoy", icon: "fa-cloud-rain", temp: "24°/18°" },
       { day: "Mar", icon: "fa-cloud-rain", temp: "25°/18°" },
@@ -51,14 +52,15 @@ const FALLBACK_REC: Record<string, any> = {
     ], note: "Temporada estable." },
   },
   sur: {
-    title: "Z2 — Corredor Seco", subtitle: "Condiciones para siembra",
-    main_crop: { name: "Sorgo", status: "Recomendado", description: "Resistente a sequía.", benefits: ["Alta resistencia"] },
-    alt_crop: { name: "Frijol caupí", status: "Alternativa", description: "Tolerante a estrés.", benefits: [] },
-    actions: [
-      { icon: "fa-droplet", title: "Riego", description: "Complementar en momentos críticos." },
-      { icon: "fa-leaf", title: "Mulch", description: "Retener humedad." },
-    ],
-    weather: { title: "Sequía", forecast: "Planificar riego.", days: [
+    title: "Z2 — Corredor Seco",
+    subtitle: "Madriz, Estelí, N. Segovia, León, Chinandega",
+    temp_range: "25° – 35°C",
+    rainfall: "600 – 1000 mm/año",
+    season: "Mayo – Junio",
+    rainy_season: "Mayo – Octubre",
+    rent_crop: "Ajonjolí",
+    food_crop: "Sorgo",
+    weather: { title: "Época seca", forecast: "Planificar riego.", days: [
       { day: "Hoy", icon: "fa-sun", temp: "28°/19°" },
       { day: "Mar", icon: "fa-sun", temp: "29°/20°" },
       { day: "Mié", icon: "fa-sun", temp: "29°/20°" },
@@ -67,13 +69,14 @@ const FALLBACK_REC: Record<string, any> = {
     ], note: "Poca lluvia." },
   },
   centro: {
-    title: "Z3 — Caribe Subhúmedo", subtitle: "Condiciones para siembra",
-    main_crop: { name: "Cacao", status: "Recomendado", description: "Humedad constante.", benefits: ["Excelente adaptación"] },
-    alt_crop: { name: "Yuca", status: "Alternativa", description: "Opción resistente.", benefits: [] },
-    actions: [
-      { icon: "fa-leaf", title: "Humedad", description: "Monitorear nivel." },
-      { icon: "fa-droplet", title: "Drenaje", description: "Evitar exceso." },
-    ],
+    title: "Z3 — Caribe Subhúmedo",
+    subtitle: "RACCN, RACCS, Río San Juan",
+    temp_range: "24° – 30°C",
+    rainfall: "2500 – 4000 mm/año",
+    season: "Abril – Julio",
+    rainy_season: "Abril – Diciembre",
+    rent_crop: "Cacao",
+    food_crop: "Yuca",
     weather: { title: "Lluvia frecuente", forecast: "Muy favorable.", days: [
       { day: "Hoy", icon: "fa-cloud-rain", temp: "26°/21°" },
       { day: "Mar", icon: "fa-cloud-rain", temp: "26°/21°" },
@@ -83,13 +86,14 @@ const FALLBACK_REC: Record<string, any> = {
     ], note: "Precipitaciones regulares." },
   },
   occidente: {
-    title: "Z4 — Zona de Transición", subtitle: "Condiciones para siembra",
-    main_crop: { name: "Café", status: "Recomendado", description: "Condiciones mixtas.", benefits: ["Equilibrio humedad"] },
-    alt_crop: { name: "Frijol", status: "Alternativa", description: "Versátil.", benefits: [] },
-    actions: [
-      { icon: "fa-leaf", title: "Monitorear", description: "Equilibrio riego-drenaje." },
-      { icon: "fa-tree", title: "Agroforestería", description: "Integrar árboles." },
-    ],
+    title: "Z4 — Zona de Transición",
+    subtitle: "Managua, Masaya, Granada, Carazo, Rivas, Boaco, Chontales",
+    temp_range: "22° – 32°C",
+    rainfall: "800 – 1400 mm/año",
+    season: "Mayo – Julio",
+    rainy_season: "Mayo – Octubre",
+    rent_crop: "Café",
+    food_crop: "Frijol",
     weather: { title: "Variables", forecast: "Equilibrio.", days: [
       { day: "Hoy", icon: "fa-cloud-sun", temp: "26°/19°" },
       { day: "Mar", icon: "fa-cloud-rain", temp: "25°/18°" },
@@ -107,8 +111,10 @@ export default function Home() {
   const svgRef = useRef<HTMLObjectElement>(null);
   const activePathRef = useRef<SVGPathElement | null>(null);
   const attached = useRef(false);
+  const [view, setView] = useState<'map' | 'results'>('map');
 
   const selectZone = useCallback((zoneId: string) => {
+    setView('results');
     setSelectedZone(zoneId);
     setLoading(true);
     setRec(null);
@@ -116,12 +122,21 @@ export default function Home() {
     fetch(`${API}/v1/zones/${zoneId}`)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
-        if (data) setRec(data);
+        if (data) setRec({ ...FALLBACK_REC[zoneId], ...data });
         else setRec(FALLBACK_REC[zoneId] ?? null);
       })
       .catch(() => setRec(FALLBACK_REC[zoneId] ?? null))
       .finally(() => setLoading(false));
   }, []);
+
+  const goBack = useCallback(() => {
+    setView('map');
+    setSelectedZone(null);
+    setRec(null);
+    attached.current = false;
+  }, []);
+
+  const [satData] = useState<{ loading: boolean }>({ loading: false });
 
   useEffect(() => {
     const obj = svgRef.current;
@@ -148,7 +163,7 @@ export default function Home() {
     obj.addEventListener("load", onLoad);
     if (obj.contentDocument?.readyState === "complete") onLoad();
     return () => obj.removeEventListener("load", onLoad);
-  }, [selectZone]);
+  }, [selectZone, view]);
 
   useEffect(() => {
     const obj = svgRef.current;
@@ -181,176 +196,176 @@ export default function Home() {
 
   return (
     <main className="app-shell" id="inicio">
-      <header className="topbar">
-        <a className="brand" href="http://127.0.0.1:5500/landing/" aria-label="PoliMilpa">
-          <Image className="brand-logo" src={brandLogo} alt="PoliMilpa" width={44} height={44} priority />
-          <span className="brand-name">PoliMilpa</span>
-        </a>
-        <nav className="topnav" aria-label="Principal">
-          <a href="#inicio">Inicio</a>
-          <a href="#zonas">Productores</a>
-        </nav>
-        <a className="primary-button" href="/login">Iniciar sesión</a>
-      </header>
+      {view === 'map' ? (
+        <>
+          <header className="topbar">
+            <a className="brand" href="http://127.0.0.1:5500/landing/" aria-label="PoliMilpa">
+              <Image className="brand-logo" src={brandLogo} alt="PoliMilpa" width={44} height={44} priority />
+              <span className="brand-name">PoliMilpa</span>
+            </a>
+          </header>
 
-      <section className="platform-grid" id="zonas">
-        <div className="zone-panel">
-          <p className="section-kicker">Selecciona tu zona</p>
-          <h2>Elige la región donde te encuentras</h2>
-          <p className="section-copy">Elige en el mapa o en la lista.</p>
+          <section className="platform-grid" id="zonas">
+            <div className="zone-panel">
+              <p className="section-kicker">Selecciona tu zona</p>
+              <h2>Elige la región donde te encuentras</h2>
+              <p className="section-copy">Elige en el mapa o en la lista.</p>
 
-          <section className="zone-list" aria-label="Zonas agroclimáticas">
-            {zoneGroups.map((group) => (
-              <article
-                className={`zone-card ${selectedZone === group.id ? "active" : ""}`}
-                key={group.id}
-                onClick={() => selectZone(group.id)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") selectZone(group.id); }}
-              >
-                <div className={`zone-icon ${group.color}`} aria-hidden="true">
-                  <i className={`fa-solid ${group.icon}`} />
+              <section className="zone-list" aria-label="Zonas agroclimáticas">
+                {zoneGroups.map((group) => (
+                  <article
+                    className={`zone-card ${selectedZone === group.id ? "active" : ""}`}
+                    key={group.id}
+                    onClick={() => selectZone(group.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") selectZone(group.id); }}
+                  >
+                    <div className={`zone-icon ${group.color}`} aria-hidden="true">
+                      <i className={`fa-solid ${group.icon}`} />
+                    </div>
+                    <div className="zone-copy">
+                      <h2>{group.title}</h2>
+                      <p>{group.description}</p>
+                    </div>
+                    <i className="fa-solid fa-chevron-right zone-chevron" aria-hidden="true" />
+                  </article>
+                ))}
+              </section>
+            </div>
+
+            <section className="map-panel" aria-label="Mapa de zonas agroclimáticas">
+              <div className="map-frame">
+                <div className="map-bg" aria-hidden="true" />
+                <object
+                  ref={svgRef}
+                  className="map-object"
+                  data={nicaraguaMap}
+                  type="image/svg+xml"
+                  aria-label="Mapa de Nicaragua con zonas agroclimáticas"
+                >
+                  Mapa de Nicaragua con zonas agroclimáticas
+                </object>
+
+                <div className="map-legend">
+                  <strong>Zonas agroclimáticas</strong>
+                  {legendItems.map((item) => (
+                    <div className="legend-row" key={item.label}>
+                      <span style={{ backgroundColor: item.color }} aria-hidden="true" />
+                      <small>{item.label}</small>
+                    </div>
+                  ))}
                 </div>
-                <div className="zone-copy">
-                  <h2>{group.title}</h2>
-                  <p>{group.description}</p>
-                </div>
-                <i className="fa-solid fa-chevron-right zone-chevron" aria-hidden="true" />
-              </article>
-            ))}
+              </div>
+            </section>
           </section>
+        </>
+      ) : (
+        <div className="results-view">
+          <button className="results-back" onClick={goBack}>
+            <i className="fa-solid fa-arrow-left" /> Volver a zonas
+          </button>
+
+          {loading ? (
+            <div className="dash-loading" style={{ minHeight: 200 }}>
+              <i className="fa-solid fa-circle-notch fa-spin" />
+              <span>Cargando datos de la zona...</span>
+            </div>
+          ) : rec ? (
+            <div className="zone-detail">
+              <div className="zone-hero">
+                <div className="zone-hero-top">
+                  <h1>{rec.title}</h1>
+                  <span className="zone-hero-badge">
+                    <i className="fa-solid fa-circle-check" />
+                    Zona seleccionada
+                  </span>
+                </div>
+                <p className="zone-subtitle">{rec.subtitle ?? ""}</p>
+              </div>
+
+              <div className="main-crops">
+                <div className="main-crops-header">
+                  <i className="fa-solid fa-seedling" />
+                  <h2>Cultivos principales</h2>
+                </div>
+                <div className="main-crops-grid">
+                  <div className="main-crop-card">
+                    <i className="fa-solid fa-leaf" />
+                    <div>
+                      <span className="main-crop-label">Cultivo de renta</span>
+                      <span className="main-crop-name">{rec.rent_crop || "—"}</span>
+                    </div>
+                  </div>
+                  <div className="main-crop-card">
+                    <i className="fa-solid fa-wheat-awn" />
+                    <div>
+                      <span className="main-crop-label">Cultivo estable</span>
+                      <span className="main-crop-name">{rec.food_crop || "—"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="climate-block">
+                <div className="climate-block-header">
+                  <i className="fa-solid fa-cloud-sun" />
+                  <h2>Clima de la zona</h2>
+                </div>
+                <div className="climate-grid-2x2">
+                  <div className="climate-card">
+                    <i className="fa-solid fa-temperature-high" />
+                    <span className="climate-card-label">Temperatura</span>
+                    <span className="climate-card-value">{rec.temp_range || "—"}</span>
+                  </div>
+                  <div className="climate-card">
+                    <i className="fa-solid fa-droplet" />
+                    <span className="climate-card-label">Lluvia anual</span>
+                    <span className="climate-card-value">{rec.rainfall || "—"}</span>
+                  </div>
+                  <div className="climate-card">
+                    <i className="fa-solid fa-calendar" />
+                    <span className="climate-card-label">Temporada de lluvias</span>
+                    <span className="climate-card-value">{rec.rainy_season || "—"}</span>
+                  </div>
+                  <div className="climate-card">
+                    <i className="fa-solid fa-seedling" />
+                    <span className="climate-card-label">Época de siembra</span>
+                    <span className="climate-card-value">{rec.season || "—"}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sat-section">
+                <div className="sat-header">
+                  <i className="fa-solid fa-satellite" />
+                  <h2>Pulso satelital</h2>
+                </div>
+                {satData.loading ? (
+                  <div className="sat-shimmer">
+                    <i className="fa-solid fa-circle-notch fa-spin" />
+                    <span>Cargando datos satelitales...</span>
+                  </div>
+                ) : (
+                  <div className="sat-fallback">
+                    <i className="fa-solid fa-info-circle" />
+                    <span>
+                      Datos satelitales disponibles para técnicos y cooperativas
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="zone-footer">
+                <div className="zone-footer-line" />
+                <p>
+                  Plataforma PoliMilpa — Monitoreo satelital para la agricultura
+                  nicaragüense
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
-
-        <section className="map-panel" aria-label="Mapa de zonas agroclimáticas">
-          <div className="map-frame">
-            <div className="map-bg" aria-hidden="true" />
-            <object
-              ref={svgRef}
-              className="map-object"
-              data={nicaraguaMap}
-              type="image/svg+xml"
-              aria-label="Mapa de Nicaragua con zonas agroclimáticas"
-            >
-              Mapa de Nicaragua con zonas agroclimáticas
-            </object>
-
-            <div className="map-legend">
-              <strong>Zonas agroclimáticas</strong>
-              {legendItems.map((item) => (
-                <div className="legend-row" key={item.label}>
-                  <span style={{ backgroundColor: item.color }} aria-hidden="true" />
-                  <small>{item.label}</small>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      </section>
-
-      {selectedZone && rec && !loading && (
-        <section className="recommendation-panel">
-          <div className="rec-header">
-            <div>
-              <h1>{rec.title}</h1>
-              <div className="rec-badge"><i className="fa-solid fa-circle-check" /> Zona seleccionada</div>
-            </div>
-            <p className="rec-subtitle">{rec.subtitle}</p>
-          </div>
-
-          <div className="rec-grid">
-            <div className="rec-left">
-              <div className="rec-section">
-                <div className="rec-section-header">
-                  <i className="fa-solid fa-leaf" />
-                  <h2>Esta semana te recomendamos:</h2>
-                </div>
-                <div className="crop-card recommended">
-                  <div className="crop-image"><div className="crop-placeholder"><i className="fa-solid fa-leaf" /></div></div>
-                  <div className="crop-info">
-                    <h3>{rec.main_crop?.name ?? "—"}</h3>
-                    <span className="crop-badge recommended">{rec.main_crop?.status ?? ""}</span>
-                    <p>{rec.main_crop?.description ?? ""}</p>
-                    {rec.main_crop?.benefits?.length > 0 && (
-                      <div className="crop-benefits">
-                        {(rec.main_crop.benefits as string[]).map((b: string, i: number) => (
-                          <span key={i}><i className="fa-solid fa-check" /> {b}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="crop-card alternative">
-                  <div className="crop-image"><div className="crop-placeholder"><i className="fa-solid fa-leaf" /></div></div>
-                  <div className="crop-info">
-                    <h3>{rec.alt_crop?.name ?? "—"}</h3>
-                    <span className="crop-badge alternative">{rec.alt_crop?.status ?? ""}</span>
-                    <p>{rec.alt_crop?.description ?? ""}</p>
-                  </div>
-                </div>
-                <div className="rec-note">
-                  <i className="fa-solid fa-circle-info" />
-                  <span>Recomendaciones con datos satelitales (Copernicus) y climáticos.</span>
-                </div>
-              </div>
-
-              <div className="rec-section">
-                <h2>¿Qué puedes hacer esta semana?</h2>
-                <div className="actions-grid">
-                  {(rec.actions ?? []).map((a: any, i: number) => (
-                    <div key={i} className="action-card">
-                      <div className="action-icon"><i className={`fa-solid ${a.icon}`} /></div>
-                      <h3>{a.title}</h3>
-                      <p>{a.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="rec-right">
-              <div className="rec-section weather-section">
-                <div className="weather-header">
-                  <i className="fa-solid fa-cloud" />
-                  <h2>Clima en tu zona</h2>
-                </div>
-                <h3 className="weather-title">{rec.weather?.title ?? ""}</h3>
-                <p className="weather-forecast">{rec.weather?.forecast ?? ""}</p>
-                <div className="forecast-days">
-                  {(rec.weather?.days ?? []).map((d: any, i: number) => (
-                    <div key={i} className="forecast-day">
-                      <span className="day-name">{d.day}</span>
-                      <i className={`fa-solid ${d.icon}`} />
-                      <span className="day-temp">{d.temp}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="weather-note">
-                  <i className="fa-solid fa-wave" />
-                  <span>{rec.weather?.note ?? ""}</span>
-                </div>
-              </div>
-
-              <div className="rec-section tech-section">
-                <div className="tech-icon"><i className="fa-solid fa-user-tie" /></div>
-                <h2>¿Quieres recomendaciones precisas para tu finca?</h2>
-                <p>Un técnico puede analizar tu parcela.</p>
-                <button type="button" className="tech-cta" onClick={() => window.location.href = "/login"}>
-                  <i className="fa-solid fa-lock" /> Sin compromiso
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {selectedZone && loading && (
-        <section className="recommendation-panel">
-          <div className="dash-loading" style={{ minHeight: 200 }}>
-            <i className="fa-solid fa-circle-notch fa-spin" />
-            <span>Cargando datos de la zona...</span>
-          </div>
-        </section>
       )}
     </main>
   );

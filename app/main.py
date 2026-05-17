@@ -13,28 +13,17 @@ from app.config import settings
 from app.db import get_db
 from app.models import Farmer, PublicDemoCase
 from app.schemas import (
-    AIAdvisoryInput,
-    AIAdvisoryResponse,
-    AutoParcelInput,
-    FarmerCreate,
-    FarmerResponse,
-    FarmerUpdate,
-    LoginInput,
-    MapTileInput,
-    MapTileResponse,
-    ParcelInput,
-    PublicDemoCaseResponse,
-    RecommendationResponse,
-    TokenResponse,
-    UserResponse,
-    ZoneInfoResponse,
+    AIAdvisoryInput, AIAdvisoryResponse, AgroZone, DashboardResponse,
+    FarmerCreate, FarmerResponse, LoginAuditItem, LoginRequest,
+    LoginResponse, PublicDemoCaseResponse, RecommendationResponse,
+    UserCreate, UserResponse, ZoneInfoResponse,
 )
 from app.services.ai_service import ai_service
 from app.services.auth_service import AuthService, UserIdentity
 from app.services.c3s_client import C3SClient
 from app.services.gee_client import GEEClient
 from app.services.ml_service import MLService
-from app.services.rules_engine import recommend
+from app.services.rules_engine import recommend, ZONE_CATALOG
 from app.services.area_utils import compute_area
 
 app = FastAPI(title=settings.app_name, version=settings.app_version)
@@ -525,11 +514,44 @@ _ZONE_INFO = {
 }
 
 
+_ZONE_TO_AGRO = {
+    "norte": AgroZone.HIGHLAND_HUMID,
+    "sur": AgroZone.DRY_CORRIDOR,
+    "centro": AgroZone.SUBHUMID_CARIBBEAN,
+    "occidente": AgroZone.TRANSITION,
+}
+
+_CROP_DISPLAY = {
+    "cafe": "Café", "cacao": "Cacao",
+    "maiz": "Maíz", "frijol": "Frijol",
+    "sorgo": "Sorgo", "yuca": "Yuca",
+    "ajonjoli": "Ajonjolí", "frijol_caupi": "Frijol caupí",
+    "platano": "Plátano", "platano_comercial": "Plátano",
+    "cafe_resiliente": "Café", "ayote": "Ayote",
+    "quequisque": "Quequisque", "malanga": "Malanga",
+    "frijol_humedo": "Frijol",
+}
+
+def _display_crop(name: str) -> str:
+    return _CROP_DISPLAY.get(name, name.title())
+
 @app.get("/v1/zones/{zone_id}", response_model=ZoneInfoResponse)
 def get_zone_info(zone_id: str) -> ZoneInfoResponse:
     info = _ZONE_INFO.get(zone_id)
     if info is None:
         raise HTTPException(status_code=404, detail=f"Zona '{zone_id}' no encontrada")
+
+    agro_key = _ZONE_TO_AGRO.get(zone_id)
+    if agro_key:
+        catalog = ZONE_CATALOG.get(agro_key, {})
+        rent_list = catalog.get("rent", [])
+        food_list = catalog.get("food", [])
+        info = {
+            **info,
+            "rent_crop": _display_crop(rent_list[0]) if rent_list else "",
+            "food_crop": _display_crop(food_list[0]) if food_list else "",
+        }
+
     return ZoneInfoResponse(zone_id=zone_id, **info)
 
 
