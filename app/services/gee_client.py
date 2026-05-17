@@ -1,6 +1,9 @@
 import datetime as dt
+import json
 import os
 from typing import Any, Dict, Optional
+
+from app.services.cache import gee_cache
 
 
 class GEEClient:
@@ -36,6 +39,7 @@ class GEEClient:
             self._ee = None
             return False
 
+    @gee_cache.memoize
     def _compute_gee_features(
         self, lat: float, lon: float
     ) -> Optional[Dict[str, float]]:
@@ -82,8 +86,8 @@ class GEEClient:
         s1_img = ee.Image(s1.select("VV").median())
         moisture = s1_img.unitScale(-18, -5).clamp(0, 1).rename("soil_moisture")
 
-        # DEM Copernicus para pendiente. Este dataset se publica como ImageCollection.
-        dem = ee.ImageCollection("COPERNICUS/DEM/GLO30").select("DEM").mosaic()
+        # SRTM DEM para pendiente (más estable que COPERNICUS/DEM/GLO30 como ImageCollection)
+        dem = ee.Image("USGS/SRTMGL1_003")
         slope = ee.Terrain.slope(dem).rename("slope")
 
         combined = ee.Image.cat([moisture, msavi2, slope]).reduceRegion(
@@ -110,11 +114,12 @@ class GEEClient:
             "shade_index": shade,
             "stress_index": stress,
             "slope_percent": max(0.0, min(100.0, float(slope_value))),
+            "msavi2": round(float(msavi2_value), 4),
             "source": "gee",
             "s1_dataset": "COPERNICUS/S1_GRD",
             "s2_dataset": "COPERNICUS/S2_SR_HARMONIZED",
             "s2_index": "msavi2",
-            "dem_dataset": "COPERNICUS/DEM/GLO30",
+            "dem_dataset": "USGS/SRTMGL1_003",
             "lat": lat,
             "lon": lon,
         }
@@ -147,3 +152,101 @@ class GEEClient:
                 "proyecto y disponibilidad de imagenes para la coordenada."
             )
         return gee_features
+
+    def get_classification_tile(
+        self,
+        lat: float,
+        lon: float,
+        agro_zone: object,
+        geometry: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        if not self._ensure_initialized() or self._ee is None:
+            return None
+
+        ee = self._ee
+        start_date, end_date = self._gee_date_range()
+
+        if geometry:
+            try:
+                coords = json.loads(geometry)
+                if coords.get("type") == "Polygon":
+                    roi = ee.Geometry.Polygon(coords["coordinates"])
+                elif coords.get("type") == "Feature" and coords.get("geometry", {}).get("type") == "Polygon":
+                    roi = ee.Geometry.Polygon(coords["geometry"]["coordinates"])
+                else:
+                    roi = ee.Geometry.Point([lon, lat]).buffer(120).bounds()
+            except Exception:
+                roi = ee.Geometry.Point([lon, lat]).buffer(120).bounds()
+        else:
+            roi = ee.Geometry.Point([lon, lat]).buffer(120).bounds()
+
+        zone_name = agro_zone.value if hasattr(agro_zone, "value") else str(agro_zone)
+        zp = _ZONE_PARAMS.get(zone_name, _ZONE_PARAMS["transition"])
+
+        s2 = (
+            ee.ImageCollection("COPERNICUS/S2_SR_HARMONIZED")
+            .filterBounds(roi)
+            .filterDate(start_date, end_date)
+            .filter(ee.Filter.lt("CLOUDY_PIXEL_PERCENTAGE", 50))
+        )
+        s2_img = ee.Image(s2.median()).clip(roi)
+        nir = s2_img.select("B8")
+        red = s2_img.select("B4")
+        msavi2 = (
+            nir.multiply(2)
+            .add(1)
+            .subtract(
+                nir.multiply(2)
+                .add(1)
+                .pow(2)
+                .subtract(nir.subtract(red).multiply(8))
+                .sqrt()
+            )
+            .divide(2)
+        )
+
+        msavi2_norm = msavi2.add(1).divide(2).clamp(zp["cmin"], zp["cmax"])
+        coverage = msavi2_norm.subtract(zp["cmin"]).divide(zp["cmax"] - zp["cmin"]).clamp(0, 1)
+
+        dem = ee.Image("USGS/SRTMGL1_003")
+        slope = ee.Terrain.slope(dem)
+        slope_norm = slope.clamp(0, 12).divide(12)
+        slope_score = ee.Image(1).subtract(slope_norm)
+
+        score_img = coverage.multiply(zp["wc"]).add(slope_score.multiply(zp["wp"]))
+        tgreen, tred = zp["tg"], zp["tr"]
+
+        classified = (
+            ee.Image(1)
+            .where(score_img.gte(tgreen), 3)
+            .where(score_img.lt(tgreen).And(score_img.gte(tred)), 2)
+            .where(score_img.lt(tred), 1)
+            .clip(roi)
+        )
+
+        vis = classified.visualize(
+            min=1,
+            max=3,
+            palette=["d73027", "fdae61", "1a9850"],
+            opacity=0.7,
+        )
+
+        try:
+            map_id = vis.getMapId()
+            mid = map_id["mapid"]
+            tile_url = f"https://earthengine.googleapis.com/v1/{mid}/tiles/{{z}}/{{x}}/{{y}}"
+            return {
+                "url": tile_url,
+                "mapid": mid,
+                "center": [lat, lon],
+            }
+        except Exception:
+            return None
+
+
+_ZONE_PARAMS = {
+    "highland_humid": {"cmin": 0.10, "cmax": 0.75, "wc": 0.75, "wp": 0.25, "tg": 0.52, "tr": 0.32},
+    "subhumid_caribbean": {"cmin": 0.10, "cmax": 0.75, "wc": 0.75, "wp": 0.25, "tg": 0.52, "tr": 0.32},
+    "dry_corridor": {"cmin": 0.12, "cmax": 0.55, "wc": 0.80, "wp": 0.20, "tg": 0.48, "tr": 0.32},
+    "transition": {"cmin": 0.12, "cmax": 0.55, "wc": 0.80, "wp": 0.20, "tg": 0.48, "tr": 0.32},
+}

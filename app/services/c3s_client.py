@@ -3,6 +3,8 @@ import os
 import tempfile
 from typing import Optional
 
+from app.services.cache import c3s_cache
+
 
 class C3SClient:
     """
@@ -73,6 +75,7 @@ class C3SClient:
             "Ajusta C3S_VARIABLE o revisa el dataset."
         )
 
+    @c3s_cache.memoize
     def _fetch_monthly_precip(self, lat: float, lon: float) -> float:
         try:
             import cdsapi  # type: ignore

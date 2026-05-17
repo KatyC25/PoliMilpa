@@ -4,6 +4,42 @@ from typing import Dict, List, Optional, Tuple
 from app.schemas import AgroZone, CropRecommendation, ParcelInput
 
 
+# Parámetros calibrados desde GEE (cálculo real con Sentinel-2 + DEM)
+ZONE_PARAMS = {
+    AgroZone.HIGHLAND_HUMID: {
+        "coverage_min": 0.10,
+        "coverage_max": 0.75,
+        "weight_cob": 0.75,
+        "weight_pen": 0.25,
+        "threshold_green": 0.52,
+        "threshold_red": 0.32,
+    },
+    AgroZone.SUBHUMID_CARIBBEAN: {
+        "coverage_min": 0.10,
+        "coverage_max": 0.75,
+        "weight_cob": 0.75,
+        "weight_pen": 0.25,
+        "threshold_green": 0.52,
+        "threshold_red": 0.32,
+    },
+    AgroZone.DRY_CORRIDOR: {
+        "coverage_min": 0.12,
+        "coverage_max": 0.55,
+        "weight_cob": 0.80,
+        "weight_pen": 0.20,
+        "threshold_green": 0.48,
+        "threshold_red": 0.32,
+    },
+    AgroZone.TRANSITION: {
+        "coverage_min": 0.12,
+        "coverage_max": 0.55,
+        "weight_cob": 0.80,
+        "weight_pen": 0.20,
+        "threshold_green": 0.48,
+        "threshold_red": 0.32,
+    },
+}
+
 ZONE_CATALOG = {
     AgroZone.HIGHLAND_HUMID: {
         "macro_region": "centro_norte",
@@ -28,96 +64,37 @@ ZONE_CATALOG = {
 }
 
 DEPARTMENT_ZONE_HINTS = {
-    # Z1: Verde, Humedo de Altura
-    AgroZone.HIGHLAND_HUMID: {
-        "jinotega",
-        "matagalpa",
-    },
-    # Z2: Amarillo, Caribe Subhumedo
-    AgroZone.SUBHUMID_CARIBBEAN: {
-        "raccn",
-        "raccs",
-        "rio san juan",
-    },
-    # Z3: Rojo, Corredor Seco
+    AgroZone.HIGHLAND_HUMID: {"jinotega", "matagalpa"},
+    AgroZone.SUBHUMID_CARIBBEAN: {"raccn", "raccs", "rio san juan"},
     AgroZone.DRY_CORRIDOR: {
-        "madriz",
-        "esteli",
-        "nueva segovia",
-        "leon",
-        "chinandega",
+        "madriz", "esteli", "nueva segovia", "leon", "chinandega",
     },
-    # Z4: Naranja, Zona de Transicion
     AgroZone.TRANSITION: {
-        "managua",
-        "masaya",
-        "granada",
-        "carazo",
-        "rivas",
-        "boaco",
-        "chontales",
+        "managua", "masaya", "granada", "carazo",
+        "rivas", "boaco", "chontales",
     },
 }
 
 MUNICIPALITY_ZONE_HINTS = {
-    # Z1: Jinotega y Matagalpa
     AgroZone.HIGHLAND_HUMID: {
-        "jinotega",
-        "san rafael del norte",
-        "wiwili de jinotega",
-        "matagalpa",
-        "la dalia",
-        "sebaco",
+        "jinotega", "san rafael del norte", "wiwili de jinotega",
+        "matagalpa", "la dalia", "sebaco",
     },
-    # Z2: RACCN, RACCS, Rio San Juan
     AgroZone.SUBHUMID_CARIBBEAN: {
-        "puerto cabezas",
-        "waspan",
-        "siuna",
-        "bluefields",
-        "el rama",
-        "nueva guinea",
-        "san carlos",
-        "el castillo",
+        "puerto cabezas", "waspan", "siuna", "bluefields",
+        "el rama", "nueva guinea", "san carlos", "el castillo",
     },
-    # Z3: Madriz, Esteli, Nueva Segovia, Leon, Chinandega
     AgroZone.DRY_CORRIDOR: {
-        "somoto",
-        "palacaguina",
-        "esteli",
-        "condega",
-        "ocotal",
-        "jalapa",
-        "leon",
-        "nagarote",
-        "la paz centro",
-        "chinandega",
-        "el viejo",
-        "somotillo",
+        "somoto", "palacaguina", "esteli", "condega", "ocotal",
+        "jalapa", "leon", "nagarote", "la paz centro",
+        "chinandega", "el viejo", "somotillo",
     },
-    # Z4: Managua, Masaya, Granada, Carazo, Rivas, Boaco, Chontales
     AgroZone.TRANSITION: {
-        "managua",
-        "tipitapa",
-        "mateare",
-        "masaya",
-        "nindiri",
-        "catarina",
-        "granada",
-        "diriomo",
-        "nandaime",
-        "jinotepe",
-        "diriamba",
-        "san marcos",
-        "rivas",
-        "san juan del sur",
-        "belen",
-        "boaco",
-        "camoapa",
-        "teustepe",
-        "juigalpa",
-        "acoyapa",
-        "santo tomas",
+        "managua", "tipitapa", "mateare", "masaya", "nindiri",
+        "catarina", "granada", "diriomo", "nandaime", "jinotepe",
+        "diriamba", "san marcos", "rivas", "san juan del sur",
+        "belen", "boaco", "camoapa", "teustepe", "juigalpa",
+        "acoyapa", "santo tomas",
     },
 }
 
@@ -166,61 +143,36 @@ def _resolve_zone(parcel: ParcelInput) -> Tuple[AgroZone, str]:
     return inferred_zone, "zone_adjusted_by_department"
 
 
-def _slope_score(slope_percent: float) -> float:
-    if slope_percent <= 12:
-        return 1.0
-    if slope_percent <= 20:
-        return 0.7
-    if slope_percent <= 30:
-        return 0.4
-    return 0.1
+def _coverage_score(msavi2: float, params: dict) -> float:
+    """Normaliza MSAVI2 a 0-1 con unitScale calibrado por zona."""
+    cmin, cmax = params["coverage_min"], params["coverage_max"]
+    if cmax <= cmin:
+        return 0.5
+    return max(0.0, min(1.0, (msavi2 - cmin) / (cmax - cmin)))
 
 
-def _moisture_score(soil_moisture: float, seasonal_forecast: str) -> float:
-    modifier = {"dry": -0.1, "normal": 0.0, "wet": 0.1}.get(seasonal_forecast, 0.0)
-    adjusted = max(0.0, min(1.0, soil_moisture + modifier))
-    return adjusted
+def _slope_score_linear(slope_percent: float) -> float:
+    """Pendiente lineal inversa: 0% → 1.0, 12%+ → 0.0."""
+    return max(0.0, min(1.0, 1.0 - slope_percent / 12.0))
 
 
-def _shade_score(shade_index: float, agro_zone: AgroZone) -> float:
-    if agro_zone == AgroZone.HIGHLAND_HUMID:
-        optimal_min, optimal_max = 0.45, 0.75
-    elif agro_zone == AgroZone.DRY_CORRIDOR:
-        optimal_min, optimal_max = 0.25, 0.55
-    else:
-        optimal_min, optimal_max = 0.35, 0.7
-
-    if optimal_min <= shade_index <= optimal_max:
-        return 1.0
-    if shade_index < optimal_min:
-        return max(0.0, 1.0 - (optimal_min - shade_index) * 2)
-    return max(0.0, 1.0 - (shade_index - optimal_max) * 2)
-
-
-def _stress_score(stress_index: float) -> float:
-    return 1.0 - stress_index
-
-
-def _traffic_light(global_score: float) -> str:
-    if global_score >= 0.7:
+def _traffic_light(global_score: float, params: dict) -> str:
+    if global_score >= params["threshold_green"]:
         return "verde"
-    if global_score >= 0.45:
+    if global_score >= params["threshold_red"]:
         return "amarillo"
     return "rojo"
 
 
 def recommend(parcel: ParcelInput) -> Dict:
     effective_zone, zone_validation = _resolve_zone(parcel)
+    params = ZONE_PARAMS[effective_zone]
 
-    slope = _slope_score(parcel.slope_percent)
-    moisture = _moisture_score(parcel.soil_moisture, parcel.seasonal_forecast)
-    shade = _shade_score(parcel.shade_index, effective_zone)
-    stress = _stress_score(parcel.stress_index)
+    coverage = _coverage_score(parcel.msavi2, params)
+    slope = _slope_score_linear(parcel.slope_percent)
 
-    global_score = round(
-        (0.25 * slope + 0.35 * moisture + 0.2 * shade + 0.2 * stress), 3
-    )
-    traffic = _traffic_light(global_score)
+    global_score = round(coverage * params["weight_cob"] + slope * params["weight_pen"], 3)
+    traffic = _traffic_light(global_score, params)
 
     catalog = ZONE_CATALOG[effective_zone]
     rent_crop = catalog["rent"][0]
@@ -240,8 +192,8 @@ def recommend(parcel: ParcelInput) -> Dict:
     )
 
     reason = (
-        f"Zona {effective_zone.value}; humedad={moisture:.2f}, pendiente={slope:.2f}, "
-        f"sombra={shade:.2f}, estres={stress:.2f}"
+        f"Zona {effective_zone.value}; cobertura={coverage:.2f}, "
+        f"pendiente={slope:.2f}, msavi2={parcel.msavi2:.4f}"
     )
 
     recommendations: List[CropRecommendation] = [
@@ -254,7 +206,8 @@ def recommend(parcel: ParcelInput) -> Dict:
     ]
 
     advisory = (
-        f"Parcela {parcel.parcel_id}: {traffic.upper()}. "
+        f"Parcela {parcel.parcel_id}: {traffic.upper()} "
+        f"(score={global_score:.2f}). "
         f"Recomendacion: combinar {rent_crop} + {food_crop}. "
         f"Accion: {window.replace('_', ' ')}."
     )
@@ -278,10 +231,13 @@ def recommend(parcel: ParcelInput) -> Dict:
         "advisory_text": advisory,
         "debug_scores": {
             "global": global_score,
+            "coverage": coverage,
             "slope": slope,
-            "moisture": moisture,
-            "shade": shade,
-            "stress": stress,
+            "msavi2": parcel.msavi2,
+            "weight_cob": params["weight_cob"],
+            "weight_pen": params["weight_pen"],
+            "threshold_green": params["threshold_green"],
+            "threshold_red": params["threshold_red"],
             "zone_validation": zone_validation,
             "zone_used": effective_zone.value,
         },
