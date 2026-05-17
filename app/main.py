@@ -13,10 +13,12 @@ from app.config import settings
 from app.db import get_db
 from app.models import Farmer, PublicDemoCase
 from app.schemas import (
-    AIAdvisoryInput, AIAdvisoryResponse, AgroZone, DashboardResponse,
-    FarmerCreate, FarmerResponse, LoginAuditItem, LoginRequest,
-    LoginResponse, PublicDemoCaseResponse, RecommendationResponse,
-    UserCreate, UserResponse, ZoneInfoResponse,
+    AIAdvisoryInput, AIAdvisoryResponse, AgroZone,
+    AutoParcelInput, FarmerCreate, FarmerResponse,
+    LoginInput, MapTileInput, MapTileResponse,
+    ParcelInput, PublicDemoCaseResponse,
+    RecommendationResponse, TokenResponse,
+    UserResponse, ZoneInfoResponse,
 )
 from app.services.ai_service import ai_service
 from app.services.auth_service import AuthService, UserIdentity
