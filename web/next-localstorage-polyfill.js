@@ -1,11 +1,15 @@
-// Small safe localStorage shim for Node (used in dev only)
+// Small safe localStorage shim for Node 26+ (used in dev only)
 (function () {
 	try {
-		if (
-			typeof globalThis.localStorage !== "undefined" &&
-			typeof globalThis.localStorage.getItem === "function"
-		) {
-			return; // already proper
+		// Node 26 has a native localStorage that warns without --localstorage-file.
+		// Probe it once; if it throws, we shim.
+		if (typeof globalThis.localStorage !== "undefined") {
+			try {
+				globalThis.localStorage.getItem("__probe__");
+				return; // works fine, keep native
+			} catch (_) {
+				// native exists but is unusable — fall through to shim
+			}
 		}
 	} catch (_) {}
 
