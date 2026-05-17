@@ -183,21 +183,21 @@ export default function FarmerDetailPage() {
           </div>
         ) : farmer ? (
           <>
-            <div className="fd-header">
-              <div className="fd-header-left">
-                <h1>{farmer.farm_name}</h1>
-                <p className="fd-header-sub">
-                  {farmer.full_name} &middot; {farmer.municipality}, {farmer.department}
+            <div className="fd3-head">
+              <div>
+                <h1 className="fd3-head-name">{farmer.farm_name}</h1>
+                <p className="fd3-head-sub">
+                  {farmer.full_name} &middot; {farmer.municipality}, {farmer.department} &middot; {farmer.farmer_code}
                 </p>
               </div>
-              <span className="fd-zone-badge" style={{ backgroundColor: zoneColor }}>
+              <span className="fd3-zone" style={{ backgroundColor: zoneColor }}>
                 {zoneLabel}
               </span>
             </div>
 
-            <div className="fd-grid">
-              <div className="fd-left">
-                <div className="fd-map-wrap">
+            <div className="fd3-body">
+              <div className="fd3-left">
+                <div className="fd3-map">
                   <FarmMap
                     geometry={farmer.geometry ?? null}
                     lat={farmer.lat}
@@ -208,74 +208,100 @@ export default function FarmerDetailPage() {
                 </div>
 
                 {rec ? (
-                  <div className="rec-section">
+                  <>
                     <div
-                      className="rec-traffic"
+                      className="fd3-traffic"
                       style={{ backgroundColor: TRAFFIC_META[rec.traffic_light]?.color ?? "#999" }}
                     >
                       <i className={`fa-solid ${TRAFFIC_META[rec.traffic_light]?.icon}`} />
-                      <div className="rec-traffic-text">
+                      <div className="fd3-traffic-body">
                         <strong>{TRAFFIC_META[rec.traffic_light]?.label}</strong>
                         <span>Score global: {(typeof rec.debug_scores?.global === "number" ? rec.debug_scores.global : 0).toFixed(3)}</span>
                       </div>
                     </div>
 
-                    <div className="rec-crops">
-                      <div className="rec-crop-card">
-                        <div className="rec-crop-icon" style={{ backgroundColor: "#e8f5e9" }}>
-                          <i className="fa-solid fa-seedling" style={{ color: "#2e7d32" }} />
-                        </div>
-                        <div className="rec-crop-body">
-                          <span className="rec-crop-label">Cultivo de renta</span>
-                          <span className="rec-crop-name">{rec.recommendations[0]?.rent_crop ?? "—"}</span>
-                        </div>
+                    <div className="fd3-crops">
+                      <div className="fd3-crop fd3-crop--renta">
+                        <div className="fd3-crop-icon"><i className="fa-solid fa-seedling" /></div>
+                        <span className="fd3-crop-label">Renta</span>
+                        <span className="fd3-crop-name">{rec.recommendations[0]?.rent_crop ?? "—"}</span>
                       </div>
-                      <div className="rec-crop-card">
-                        <div className="rec-crop-icon" style={{ backgroundColor: "#fff3e0" }}>
-                          <i className="fa-solid fa-bowl-food" style={{ color: "#e65100" }} />
-                        </div>
-                        <div className="rec-crop-body">
-                          <span className="rec-crop-label">Cultivo alimentario</span>
-                          <span className="rec-crop-name">{rec.recommendations[0]?.food_crop ?? "—"}</span>
-                        </div>
+                      <div className="fd3-crop fd3-crop--food">
+                        <div className="fd3-crop-icon"><i className="fa-solid fa-bowl-food" /></div>
+                        <span className="fd3-crop-label">Alimentario</span>
+                        <span className="fd3-crop-name">{rec.recommendations[0]?.food_crop ?? "—"}</span>
                       </div>
-                      <div className="rec-crop-card">
-                        <div className="rec-crop-icon" style={{ backgroundColor: "#e3f2fd" }}>
-                          <i className="fa-solid fa-clock" style={{ color: "#1565c0" }} />
-                        </div>
-                        <div className="rec-crop-body">
-                          <span className="rec-crop-label">Ventana de siembra</span>
-                          <span className="rec-crop-name">{rec.recommended_window.replace(/_/g, " ")}</span>
-                        </div>
+                      <div className="fd3-crop fd3-crop--window">
+                        <div className="fd3-crop-icon"><i className="fa-solid fa-calendar-check" /></div>
+                        <span className="fd3-crop-label">Ventana</span>
+                        <span className="fd3-crop-name">{rec.recommended_window.replace(/_/g, " ")}</span>
                       </div>
                     </div>
+                  </>
+                  ) : null}
 
-                    <div className="ai-card">
-                      <div className="ai-card-head">
-                        <div className="ai-card-head-left">
-                          <i className="fa-solid fa-wand-magic-sparkles" />
-                          <h3>Asistente IA</h3>
-                        </div>
-                        {aiLoading && <i className="fa-solid fa-circle-notch fa-spin ai-spin" />}
+                    {rec && (
+                      <div className="fd3-tech">
+                        <button
+                          type="button"
+                          className="fd3-tech-toggle"
+                          onClick={() => setShowTech(!showTech)}
+                        >
+                          <i className="fa-solid fa-microchip" />
+                          <span>Datos técnicos</span>
+                          <i className={`fa-solid fa-chevron-down fd3-tech-chevron ${showTech ? "open" : ""}`} />
+                        </button>
+
+                        {showTech && rec.debug_scores && (
+                          <div className="fd3-tech-body">
+                            <div className="fd3-tech-grid">
+                              {Object.entries(rec.debug_scores).map(([k, v]) => (
+                                <div key={k} className="fd3-tech-item">
+                                  <span className="fd3-tech-label">{k}</span>
+                                  <span className={`fd3-tech-val ${typeof v === "string" ? "fd3-tech-str" : ""}`}>
+                                    {typeof v === "number" ? v.toFixed(3) : String(v)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                            {rec.data_source && (
+                              <p className="fd3-tech-src">
+                                <i className="fa-solid fa-satellite" /> Fuente: {rec.data_source}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+              </div>
+
+              <div className="fd3-right">
+                {rec ? (
+                  <>
+                    <div className="fd3-ai">
+                      <div className="fd3-ai-head">
+                        <i className="fa-solid fa-wand-magic-sparkles" />
+                        <h3>Asistente IA</h3>
+                        {aiLoading && <i className="fa-solid fa-circle-notch fa-spin fd3-ai-spin" />}
                       </div>
 
                       {aiAdvisory ? (
                         <>
                           {editing ? (
                             <textarea
-                              className="ai-textarea"
+                              className="fd3-ai-input"
                               value={editText}
                               onChange={(e) => setEditText(e.target.value)}
                               rows={6}
                             />
                           ) : (
-                            <p className="ai-text">{aiAdvisory.advisory}</p>
+                            <p className="fd3-ai-text">{aiAdvisory.advisory}</p>
                           )}
 
-                          <div className="ai-actions">
+                          <div className="fd3-ai-actions">
                             <button
                               type="button"
-                              className={`ai-btn ${editing ? "ai-btn-save" : "ai-btn-edit"}`}
+                              className={`fd3-ai-btn ${editing ? "fd3-ai-btn--save" : "fd3-ai-btn--edit"}`}
                               onClick={() => {
                                 if (editing) {
                                   setAiAdvisory({ ...aiAdvisory, advisory: editText });
@@ -287,7 +313,7 @@ export default function FarmerDetailPage() {
                               }}
                             >
                               <i className={`fa-solid ${editing ? "fa-check" : "fa-pen"}`} />
-                              {editing ? "Guardar cambios" : "Editar texto"}
+                              {editing ? "Guardar" : "Editar"}
                             </button>
 
                             {farmer.contact_phone && (
@@ -295,156 +321,74 @@ export default function FarmerDetailPage() {
                                 href={`https://wa.me/${farmer.contact_phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(editText)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="ai-btn ai-btn-whatsapp"
+                                className="fd3-ai-btn fd3-ai-btn--wa"
                               >
                                 <i className="fa-brands fa-whatsapp" />
-                                Enviar por WhatsApp
+                                WhatsApp
                               </a>
                             )}
                           </div>
-
-                          <div className="ai-whatsapp-preview">
-                            <i className="fa-brands fa-whatsapp" />
-                            <div>
-                              <strong>Vista previa WhatsApp</strong>
-                              <p>{aiAdvisory.whatsapp_preview}</p>
-                            </div>
-                          </div>
                         </>
                       ) : aiLoading ? (
-                        <div className="ai-generating">
-                          <div className="ai-generating-dots">
-                            <span /><span /><span />
-                          </div>
-                          <span>Generando recomendación con IA...</span>
+                        <div className="fd3-ai-wait">
+                          <span className="fd3-ai-dots"><span /><span /><span /></span>
+                          <span>Generando...</span>
                         </div>
                       ) : (
-                        <div className="ai-empty">
+                        <div className="fd3-ai-empty">
                           <i className="fa-solid fa-cloud-exclamation" />
                           <div>
                             <strong>No disponible</strong>
-                            <p>{aiError ? "Error al generar el análisis con IA. Verifica la conexión." : "Completa el análisis satelital primero."}</p>
+                            <p>{aiError ? "Error al generar análisis con IA." : "Completa el análisis satelital primero."}</p>
                           </div>
                         </div>
                       )}
                     </div>
 
-                    <div className="rec-advisory-card">
-                      <div className="rec-advisory-head">
+                    <div className="fd3-info">
+                      <div className="fd3-info-head">
+                        <i className="fa-solid fa-circle-info" />
+                        <h3>Datos de la finca</h3>
+                      </div>
+                      <dl className="fd3-info-list">
+                        <div><dt>Productor</dt><dd>{farmer.full_name}</dd></div>
+                        <div><dt>Ubicación</dt><dd>{farmer.municipality}, {farmer.department}</dd></div>
+                        <div><dt>Zona</dt><dd><span className="fd3-mini-badge" style={{ backgroundColor: zoneColor }}>{zoneLabel}</span></dd></div>
+                        {farmer.contact_phone && (
+                          <div><dt>Teléfono</dt><dd><a href={`tel:${farmer.contact_phone}`} className="fd3-phone">{farmer.contact_phone}</a></dd></div>
+                        )}
+                      </dl>
+                    </div>
+
+                    <div className="fd3-card">
+                      <div className="fd3-card-head">
                         <i className="fa-solid fa-file-lines" />
                         <h3>Análisis de la parcela</h3>
                       </div>
-                      <p>{rec.advisory_text}</p>
+                      <p className="fd3-card-text">{rec.advisory_text}</p>
                     </div>
 
-                    <div className="tech-card">
-                      <button
-                        type="button"
-                        className="tech-card-toggle"
-                        onClick={() => setShowTech(!showTech)}
-                      >
-                        <i className="fa-solid fa-microchip" />
-                        <span>Datos técnicos del análisis</span>
-                        <i className={`fa-solid fa-chevron-down tech-chevron ${showTech ? "open" : ""}`} />
-                      </button>
-
-                      {showTech && rec.debug_scores && (
-                        <div className="tech-card-body">
-                          <div className="tech-grid">
-                            {Object.entries(rec.debug_scores).map(([k, v]) => (
-                              <div key={k} className="tech-item">
-                                <span className="tech-label">{k}</span>
-                                <span className={`tech-value ${typeof v === "string" ? "tech-str" : ""}`}>
-                                  {typeof v === "number" ? v.toFixed(3) : String(v)}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                          {rec.data_source && (
-                            <p className="tech-source">
-                              <i className="fa-solid fa-satellite" /> Fuente: {rec.data_source}
-                            </p>
-                          )}
+                    {c3sValue && typeof c3sValue === "string" && C3S_META[c3sValue] ? (
+                      <div className="fd3-c3s">
+                        <div className="fd3-c3s-head">
+                          <i className={`fa-solid ${C3S_META[c3sValue].icon}`} style={{ color: C3S_META[c3sValue].color }} />
+                          <h3>Pronóstico de precipitación</h3>
                         </div>
-                      )}
-                    </div>
-                  </div>
+                        <div className="fd3-c3s-body">
+                          <span className="fd3-c3s-badge" style={{ backgroundColor: C3S_META[c3sValue].color }}>
+                            {C3S_META[c3sValue].label}
+                          </span>
+                          <p className="fd3-c3s-src"><i className="fa-solid fa-cloud" /> C3S / ECMWF</p>
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
                 ) : (
-                  <div className="rec-empty">
+                  <div className="dash-empty">
                     <i className="fa-solid fa-cloud" />
-                    <p>No se pudo generar la recomendación. Verifica que GEE esté habilitado.</p>
+                    <p>No se pudo generar la recomendación.</p>
                   </div>
                 )}
-              </div>
-
-              <div className="fd-right">
-                <div className="side-card">
-                  <div className="side-card-head">
-                    <i className="fa-solid fa-circle-info" />
-                    <h3>Datos de la finca</h3>
-                  </div>
-                  <dl className="side-list">
-                    <div className="side-list-row">
-                      <dt>Código</dt>
-                      <dd>{farmer.farmer_code}</dd>
-                    </div>
-                    <div className="side-list-row">
-                      <dt>Productor</dt>
-                      <dd>{farmer.full_name}</dd>
-                    </div>
-                    <div className="side-list-row">
-                      <dt>Municipio</dt>
-                      <dd>{farmer.municipality}</dd>
-                    </div>
-                    <div className="side-list-row">
-                      <dt>Departamento</dt>
-                      <dd>{farmer.department}</dd>
-                    </div>
-                    <div className="side-list-row">
-                      <dt>Zona</dt>
-                      <dd>
-                        <span className="mini-badge" style={{ backgroundColor: zoneColor }}>
-                          {zoneLabel}
-                        </span>
-                      </dd>
-                    </div>
-                    <div className="side-list-row">
-                      <dt>Teléfono</dt>
-                      <dd>
-                        {farmer.contact_phone ? (
-                          <a href={`tel:${farmer.contact_phone}`} className="side-phone">
-                            {farmer.contact_phone}
-                          </a>
-                        ) : "—"}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-
-                {c3sValue && typeof c3sValue === "string" && C3S_META[c3sValue] ? (
-                  <div className="side-card c3s-card" style={{ borderLeftColor: C3S_META[c3sValue].color }}>
-                    <div className="side-card-head">
-                      <i className={`fa-solid ${C3S_META[c3sValue].icon}`} style={{ color: C3S_META[c3sValue].color }} />
-                      <h3>Pronóstico de precipitación</h3>
-                    </div>
-                    <div className="c3s-body">
-                      <span className="c3s-badge" style={{ backgroundColor: C3S_META[c3sValue].color }}>
-                        {C3S_META[c3sValue].label}
-                      </span>
-                      <p className="c3s-footnote">
-                        <i className="fa-solid fa-cloud" /> C3S / ECMWF
-                      </p>
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="side-card support-card-side">
-                  <div className="side-card-head">
-                    <i className="fa-solid fa-headset" />
-                    <h3>¿Necesitas ayuda?</h3>
-                  </div>
-                  <p className="support-text">Si tienes dudas sobre la recomendación, contacta al equipo de PoliMilpa.</p>
-                </div>
               </div>
             </div>
           </>
