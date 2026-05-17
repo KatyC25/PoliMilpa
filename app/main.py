@@ -35,6 +35,7 @@ from app.services.c3s_client import C3SClient
 from app.services.gee_client import GEEClient
 from app.services.ml_service import MLService
 from app.services.rules_engine import recommend
+from app.services.area_utils import compute_area
 
 app = FastAPI(title=settings.app_name, version=settings.app_version)
 
@@ -84,6 +85,7 @@ def require_roles(*roles: str):
 
 
 def _farmer_to_response(farmer: Farmer) -> FarmerResponse:
+    area_m2, area_manzanas = compute_area(farmer.geometry)
     return FarmerResponse(
         id=farmer.id,
         farmer_code=farmer.farmer_code,
@@ -98,6 +100,8 @@ def _farmer_to_response(farmer: Farmer) -> FarmerResponse:
         geometry=farmer.geometry,
         technician_username=farmer.technician_username,
         is_active=farmer.is_active,
+        area_m2=area_m2,
+        area_manzanas=area_manzanas,
     )
 
 

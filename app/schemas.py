@@ -105,6 +105,8 @@ class FarmerResponse(BaseModel):
     geometry: Optional[str] = None
     technician_username: str
     is_active: bool
+    area_m2: Optional[float] = None
+    area_manzanas: Optional[float] = None
 
 
 class CropRecommendation(BaseModel):
