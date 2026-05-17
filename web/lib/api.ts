@@ -24,6 +24,8 @@ export type Farmer = {
 	geometry?: string | null;
 	technician_username: string;
 	is_active: boolean;
+	area_m2?: number | null;
+	area_manzanas?: number | null;
 };
 
 export type MapTile = {
