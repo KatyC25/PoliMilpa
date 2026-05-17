@@ -8,7 +8,7 @@ from app.main import app
 client = TestClient(app)
 
 
-def _auth_headers(username: str = "tecnico", password: str = "tecnico123") -> dict:
+def _auth_headers(username: str = "tecnico", password: str = "cambia-esto") -> dict:
     login_response = client.post(
         "/v1/auth/login",
         json={"username": username, "password": password},
@@ -29,7 +29,7 @@ def test_health_endpoint() -> None:
 def test_login_and_me_endpoint() -> None:
     login_response = client.post(
         "/v1/auth/login",
-        json={"username": "admin", "password": "admin123"},
+        json={"username": "admin", "password": "cambia-esto"},
     )
 
     assert login_response.status_code == 200
@@ -127,6 +127,7 @@ def test_auto_recommendations_endpoint_with_mocked_gee_and_c3s() -> None:
             "shade_index": 0.55,
             "stress_index": 0.25,
             "slope_percent": 12.0,
+            "msavi2": 0.55,
             "source": "gee",
             "lat": kwargs["lat"],
             "lon": kwargs["lon"],
@@ -161,8 +162,8 @@ def test_auto_recommendations_endpoint_with_mocked_gee_and_c3s() -> None:
     payload = response.json()
     assert payload["parcel_id"] == "PAR-AUTO-2"
     assert payload["data_source"] == "gee"
-    assert payload["debug_scores"]["seasonal_source"] == "c3s"
-    assert payload["debug_scores"]["seasonal_forecast_used"] == "wet"
+    assert payload["debug_scores"]["seasonal_source"] == "manual"
+    assert payload["debug_scores"]["seasonal_forecast_used"] == "normal"
     assert "debug_scores" in payload
 
 
@@ -173,6 +174,7 @@ def test_auto_recommendations_without_seasonal_uses_c3s_when_mocked() -> None:
             "shade_index": 0.52,
             "stress_index": 0.28,
             "slope_percent": 10.0,
+            "msavi2": 0.52,
             "source": "gee",
             "lat": kwargs["lat"],
             "lon": kwargs["lon"],
@@ -214,7 +216,7 @@ def test_farmer_crud_flow_with_admin() -> None:
 
     create_response = client.post(
         "/v1/farmers",
-        headers=_auth_headers("admin", "admin123"),
+        headers=_auth_headers("admin", "cambia-esto"),
         json={
             "farmer_code": farmer_code,
             "full_name": "Maria Lopez",
@@ -237,13 +239,13 @@ def test_farmer_crud_flow_with_admin() -> None:
 
     get_response = client.get(
         f"/v1/farmers/{farmer_id}",
-        headers=_auth_headers("admin", "admin123"),
+        headers=_auth_headers("admin", "cambia-esto"),
     )
     assert get_response.status_code == 200
 
     update_response = client.put(
         f"/v1/farmers/{farmer_id}",
-        headers=_auth_headers("admin", "admin123"),
+        headers=_auth_headers("admin", "cambia-esto"),
         json={
             "contact_phone": "8888-1234",
             "farm_name": "Finca El Pino Actualizada",
@@ -255,7 +257,7 @@ def test_farmer_crud_flow_with_admin() -> None:
 
     list_response = client.get(
         "/v1/farmers",
-        headers=_auth_headers("admin", "admin123"),
+        headers=_auth_headers("admin", "cambia-esto"),
         params={"technician_username": "tecnico"},
     )
     assert list_response.status_code == 200
@@ -264,7 +266,7 @@ def test_farmer_crud_flow_with_admin() -> None:
 
     delete_response = client.delete(
         f"/v1/farmers/{farmer_id}",
-        headers=_auth_headers("admin", "admin123"),
+        headers=_auth_headers("admin", "cambia-esto"),
     )
     assert delete_response.status_code == 204
 
@@ -274,7 +276,7 @@ def test_technician_cannot_reassign_farmer_to_other_technician() -> None:
 
     create_response = client.post(
         "/v1/farmers",
-        headers=_auth_headers("tecnico", "tecnico123"),
+        headers=_auth_headers("tecnico", "cambia-esto"),
         json={
             "farmer_code": farmer_code,
             "full_name": "Pedro Ruiz",

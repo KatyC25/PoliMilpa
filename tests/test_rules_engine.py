@@ -13,6 +13,7 @@ def test_recommendation_green_for_good_conditions() -> None:
         shade_index=0.6,
         stress_index=0.1,
         seasonal_forecast="normal",
+        msavi2=0.6,
     )
 
     result = recommend(payload)
@@ -33,6 +34,7 @@ def test_recommendation_red_for_bad_conditions() -> None:
         shade_index=0.0,
         stress_index=0.9,
         seasonal_forecast="dry",
+        msavi2=0.05,
     )
 
     result = recommend(payload)
@@ -52,6 +54,7 @@ def test_dry_forecast_prioritizes_sorghum_when_available() -> None:
         shade_index=0.4,
         stress_index=0.3,
         seasonal_forecast="dry",
+        msavi2=0.3,
     )
 
     result = recommend(payload)
@@ -70,6 +73,7 @@ def test_department_zone_adjustment_when_input_zone_conflicts() -> None:
         shade_index=0.62,
         stress_index=0.2,
         seasonal_forecast="wet",
+        msavi2=0.5,
     )
 
     result = recommend(payload)
@@ -90,6 +94,7 @@ def test_unknown_department_keeps_input_zone() -> None:
         shade_index=0.5,
         stress_index=0.3,
         seasonal_forecast="normal",
+        msavi2=0.4,
     )
 
     result = recommend(payload)
@@ -112,6 +117,7 @@ def test_municipality_has_priority_over_department_when_they_conflict() -> None:
         shade_index=0.5,
         stress_index=0.2,
         seasonal_forecast="normal",
+        msavi2=0.45,
     )
 
     result = recommend(payload)
