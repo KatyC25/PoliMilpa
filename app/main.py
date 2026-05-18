@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
+from fastapi import Body, Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from dotenv import load_dotenv
@@ -273,7 +273,7 @@ def get_farmer(
 @app.put("/v1/farmers/{farmer_id}", response_model=FarmerResponse)
 def update_farmer(
     farmer_id: int,
-    payload: FarmerUpdate,
+    payload: FarmerUpdate = Body(...),
     user: UserIdentity = Depends(require_roles("superadmin", "admin", "tecnico")),
     db: Session = Depends(get_db),
 ) -> FarmerResponse:
