@@ -289,6 +289,9 @@ def update_farmer(
         _validate_technician_scope(user, payload.technician_username)
         farmer.technician_username = payload.technician_username
 
+    if payload.farmer_code is not None:
+        farmer.farmer_code = payload.farmer_code
+
     if payload.full_name is not None:
         farmer.full_name = payload.full_name
     if payload.contact_phone is not None:

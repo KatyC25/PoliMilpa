@@ -78,6 +78,7 @@ class FarmerCreate(FarmerBase):
 
 
 class FarmerUpdate(BaseModel):
+    farmer_code: Optional[str] = None
     full_name: Optional[str] = None
     contact_phone: Optional[str] = None
     farm_name: Optional[str] = None
