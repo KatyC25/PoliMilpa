@@ -131,6 +131,7 @@ class MapTileInput(BaseModel):
     parcel_id: str
     lat: float
     lon: float
+    agro_zone: AgroZone = AgroZone.TRANSITION
     geometry: Optional[str] = None
 
 

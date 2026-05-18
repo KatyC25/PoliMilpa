@@ -161,6 +161,7 @@ export async function fetchMapTiles(
 	lat: number,
 	lon: number,
 	geometry?: string | null,
+	agro_zone?: string | null,
 ): Promise<MapTile | null> {
 	const res = await fetchWithAuth("/v1/recommendations/auto/map", {
 		method: "POST",
@@ -169,6 +170,7 @@ export async function fetchMapTiles(
 			parcel_id: "map",
 			lat,
 			lon,
+			agro_zone: agro_zone || "transition",
 			geometry: geometry || undefined,
 		}),
 	});

@@ -432,7 +432,7 @@ def generate_recommendation_map_tiles(
     tile = gee_client.get_classification_tile(
         lat=payload.lat,
         lon=payload.lon,
-        agro_zone="transition",
+        agro_zone=payload.agro_zone,
         geometry=payload.geometry,
     )
     if tile is None:

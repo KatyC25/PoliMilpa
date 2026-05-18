@@ -100,7 +100,7 @@ export default function FarmerDetailPage() {
         if (f.lat && f.lon) {
           const [r, tile] = await Promise.all([
             getAutoRecommendation(f.farmer_code, f.municipality, f.department, f.agro_zone, f.lat, f.lon),
-            fetchMapTiles(f.lat, f.lon, f.geometry).catch(() => null),
+            fetchMapTiles(f.lat, f.lon, f.geometry, f.agro_zone).catch(() => null),
           ]);
           if (!cancelled) {
             setRec(r);
