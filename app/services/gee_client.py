@@ -45,7 +45,10 @@ class GEEClient:
                 ee.Initialize()
             self._ee = ee
             return True
-        except Exception:
+        except Exception as exc:
+            import traceback
+            print(f"[GEE_INIT] Error: {exc}", flush=True)
+            traceback.print_exc()
             self._ee = None
             return False
 
@@ -107,12 +110,17 @@ class GEEClient:
             bestEffort=True,
             maxPixels=1_000_000,
         )
-        values = combined.getInfo() or {}
+        try:
+            values = combined.getInfo() or {}
+        except Exception as exc:
+            print(f"[GEE_GETINFO] Error: {exc}", flush=True)
+            return None
 
         msavi2_value = values.get("msavi2")
         moisture_value = values.get("soil_moisture")
         slope_value = values.get("slope")
         if msavi2_value is None or moisture_value is None or slope_value is None:
+            print(f"[GEE_NULLS] msavi2={msavi2_value}, moisture={moisture_value}, slope={slope_value}", flush=True)
             return None
 
         msavi2_normalized = max(0.0, min(1.0, (float(msavi2_value) + 1.0) / 2.0))
