@@ -44,7 +44,8 @@ class GEEClient:
                 ee.Initialize()
             self._ee = ee
             return True
-        except Exception:
+        except Exception as exc:
+            print(f"[GEE] Error inicializando: {exc}", flush=True)
             self._ee = None
             return False
 
@@ -106,12 +107,17 @@ class GEEClient:
             bestEffort=True,
             maxPixels=1_000_000,
         )
-        values = combined.getInfo() or {}
+        try:
+            values = combined.getInfo() or {}
+        except Exception as exc:
+            print(f"[GEE] Error en getInfo: {exc}", flush=True)
+            return None
 
         msavi2_value = values.get("msavi2")
         moisture_value = values.get("soil_moisture")
         slope_value = values.get("slope")
         if msavi2_value is None or moisture_value is None or slope_value is None:
+            print(f"[GEE] Valores nulos: msavi2={msavi2_value}, moisture={moisture_value}, slope={slope_value}", flush=True)
             return None
 
         msavi2_normalized = max(0.0, min(1.0, (float(msavi2_value) + 1.0) / 2.0))
@@ -157,8 +163,7 @@ class GEEClient:
         gee_features = self._compute_gee_features(lat=lat, lon=lon)
         if gee_features is None:
             raise RuntimeError(
-                "No fue posible obtener features desde GEE. Verifica autenticacion, "
-                "proyecto y disponibilidad de imagenes para la coordenada."
+                "GEE: No fue posible obtener features. Revisa logs de Render para el error exacto."
             )
         return gee_features
 
@@ -170,6 +175,7 @@ class GEEClient:
         geometry: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         if not self._ensure_initialized() or self._ee is None:
+            print(f"[GEE] get_classification_tile: no inicializado", flush=True)
             return None
 
         ee = self._ee
