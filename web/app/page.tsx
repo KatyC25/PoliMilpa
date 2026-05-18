@@ -149,11 +149,12 @@ export default function Home() {
 
       const paths = doc.querySelectorAll("path[id]");
       paths.forEach((path) => {
-        const zoneId = DEPT_ZONE[path.id];
+        const el = path as SVGPathElement;
+        const zoneId = DEPT_ZONE[el.id];
         if (!zoneId) return;
 
-        path.style.cursor = "pointer";
-        path.addEventListener("click", (e) => {
+        el.style.cursor = "pointer";
+        el.addEventListener("click", (e) => {
           e.stopPropagation();
           selectZone(zoneId);
         });
@@ -178,14 +179,14 @@ export default function Home() {
 
     const targetZone = selectedZone;
     let firstPath: SVGPathElement | null = null;
-    doc.querySelectorAll("path[id]").forEach((path) => {
+    for (const path of doc.querySelectorAll("path[id]")) {
       const el = path as SVGPathElement;
       const zoneId = DEPT_ZONE[el.id];
-      if (!zoneId) return;
+      if (!zoneId) continue;
       if (zoneId === targetZone && !firstPath) {
         firstPath = el;
       }
-    });
+    }
 
     if (firstPath) {
       firstPath.style.outline = `3px solid ${ZONE_COLORS[targetZone] ?? "#999"}`;
@@ -199,7 +200,7 @@ export default function Home() {
       {view === 'map' ? (
         <>
           <header className="topbar">
-            <a className="brand" href="http://127.0.0.1:5500/landing/" aria-label="PoliMilpa">
+            <a className="brand" href="https://poli-milpa.vercel.app" aria-label="PoliMilpa">
               <Image className="brand-logo" src={brandLogo} alt="PoliMilpa" width={44} height={44} priority />
               <span className="brand-name">PoliMilpa</span>
             </a>
