@@ -46,7 +46,7 @@ export default function LoginPage() {
 		<main className="login-shell">
 			<section className="login-layout" aria-label="Acceso PoliMilpa">
 				<div className="login-hero">
-					<a className="login-branding" href="http://127.0.0.1:5500/landing/">
+					<a className="login-branding" href="https://poli-milpa.vercel.app">
 						<div className="login-brand-mark">
 							<Image
 								src={brandLogo}
