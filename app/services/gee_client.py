@@ -29,7 +29,16 @@ class GEEClient:
         try:
             import ee  # type: ignore
 
-            if self.project_id:
+            key_json = os.getenv("GEE_SERVICE_ACCOUNT_KEY")
+            if key_json:
+                import json as _json
+
+                creds_data = _json.loads(key_json)
+                credentials = ee.ServiceAccountCredentials(
+                    creds_data["client_email"], key_data=key_json
+                )
+                ee.Initialize(credentials, project=self.project_id)
+            elif self.project_id:
                 ee.Initialize(project=self.project_id)
             else:
                 ee.Initialize()
