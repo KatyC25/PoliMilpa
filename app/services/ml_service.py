@@ -16,6 +16,6 @@ class MLService:
             adjustment -= 0.05
 
         return {
-            "confidence_delta": adjustment,
+            "model_adjustment": adjustment,
             "model_version": "rf_placeholder_v0",
         }

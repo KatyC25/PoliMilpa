@@ -97,8 +97,8 @@ class GEEClient:
         s1_img = ee.Image(s1.select("VV").median())
         moisture = s1_img.unitScale(-18, -5).clamp(0, 1).rename("soil_moisture")
 
-        # SRTM DEM para pendiente (más estable que COPERNICUS/DEM/GLO30 como ImageCollection)
-        dem = ee.Image("USGS/SRTMGL1_003")
+        # Copernicus DEM GLO-30 para pendiente
+        dem = ee.ImageCollection("COPERNICUS/DEM/GLO30").select('DEM').mosaic()
         slope = ee.Terrain.slope(dem).rename("slope")
 
         combined = ee.Image.cat([moisture, msavi2, slope]).reduceRegion(
@@ -133,7 +133,7 @@ class GEEClient:
             "s1_dataset": "COPERNICUS/S1_GRD",
             "s2_dataset": "COPERNICUS/S2_SR_HARMONIZED",
             "s2_index": "msavi2",
-            "dem_dataset": "USGS/SRTMGL1_003",
+            "dem_dataset": "COPERNICUS/DEM/GLO30",
             "lat": lat,
             "lon": lon,
         }
@@ -221,7 +221,7 @@ class GEEClient:
         msavi2_norm = msavi2.add(1).divide(2).clamp(zp["cmin"], zp["cmax"])
         coverage = msavi2_norm.subtract(zp["cmin"]).divide(zp["cmax"] - zp["cmin"]).clamp(0, 1)
 
-        dem = ee.Image("USGS/SRTMGL1_003")
+        dem = ee.ImageCollection("COPERNICUS/DEM/GLO30").select('DEM').mosaic()
         slope = ee.Terrain.slope(dem)
         slope_norm = slope.clamp(0, 12).divide(12)
         slope_score = ee.Image(1).subtract(slope_norm)

@@ -402,7 +402,7 @@ def generate_auto_recommendation(
 
     result = recommend(rules_payload)
     adjustment = ml_service.predict_adjustment(result["debug_scores"])
-    result["debug_scores"]["confidence_delta"] = adjustment["confidence_delta"]
+    result["debug_scores"]["model_adjustment"] = adjustment["model_adjustment"]
     result["debug_scores"]["model_version"] = adjustment["model_version"]
     result["debug_scores"]["seasonal_source"] = seasonal_source
     result["debug_scores"]["seasonal_forecast_used"] = seasonal_forecast
