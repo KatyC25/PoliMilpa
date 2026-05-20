@@ -1,3 +1,4 @@
+import datetime as dt
 import unicodedata
 from typing import Dict, List, Optional, Tuple
 
@@ -63,8 +64,7 @@ ZONE_CATALOG = {
     },
 }
 
-# Catalogo departamental: cultivos reales por departamento segun datos MAG/INTA.
-# Las claves estan normalizadas (sin acentos, lowercase).
+# Catalogo departamental: cultivos por departamento segun datos MAG/INTA.
 # Si un departamento no aparece aqui, se usa ZONE_CATALOG como fallback.
 DEPARTMENT_CATALOG = {
     "jinotega":     {"rent": ["cafe"],              "food": ["maiz", "frijol", "papa"]},
@@ -135,6 +135,26 @@ def _normalize_municipality(municipality: str) -> str:
     return _normalize_place(municipality)
 
 
+def _get_ciclo() -> dict:
+    mes = dt.date.today().month
+    if 5 <= mes <= 8:
+        return {"name": "primera", "months": "mayo-agosto",
+                "prefiere": ["maiz", "arroz", "yuca", "papa", "mani"]}
+    if 9 <= mes <= 12:
+        return {"name": "postrera", "months": "septiembre-diciembre",
+                "prefiere": ["frijol", "sorgo", "papa", "tomate"]}
+    return {"name": "apante", "months": "enero-abril (requiere riego)",
+            "prefiere": ["frijol", "chiltoma", "tomate", "hortalizas"]}
+
+
+def _next_ciclo(actual: str) -> dict:
+    ciclos = {"primera": ("postrera", "septiembre-diciembre"),
+              "postrera": ("apante", "enero-abril"),
+              "apante": ("primera", "mayo-agosto")}
+    name, months = ciclos[actual]
+    return {"name": name, "months": months}
+
+
 def _infer_zone_from_department(department: str) -> Optional[AgroZone]:
     dep = _normalize_department(department)
     for zone, departments in DEPARTMENT_ZONE_HINTS.items():
@@ -199,10 +219,12 @@ def recommend(parcel: ParcelInput) -> Dict:
 
     dep_key = _normalize_department(parcel.department)
     catalog = DEPARTMENT_CATALOG.get(dep_key, ZONE_CATALOG[effective_zone])
-    catalog_source = "department" if dep_key in DEPARTMENT_CATALOG else "zone"
 
     rent_crop = catalog["rent"][0]
-    food_crop = catalog["food"][0]
+    ciclo = _get_ciclo()
+
+    preferidos = [c for c in ciclo["prefiere"] if c in catalog["food"]]
+    food_crop = preferidos[0] if preferidos else catalog["food"][0]
 
     if parcel.seasonal_forecast == "dry" and "sorgo" in catalog["food"]:
         food_crop = "sorgo"
@@ -224,19 +246,24 @@ def recommend(parcel: ParcelInput) -> Dict:
         f"pendiente={slope:.2f}, msavi2={parcel.msavi2:.4f}"
     )
 
-    recommendations: List[CropRecommendation] = [
-        CropRecommendation(
-            rent_crop=rent_crop,
-            food_crop=food_crop,
-            confidence=global_score,
-            reason=reason,
+    prox = _next_ciclo(ciclo["name"])
+    otros = [c for c in catalog["food"] if c != food_crop]
+    if otros:
+        seasonal_context = (
+            f"Ciclo {ciclo['name']} ({ciclo['months']}): siembra {food_crop}. "
+            f"Para {prox['name']} ({prox['months']}) considera {otros[0]}."
         )
-    ]
+    else:
+        seasonal_context = (
+            f"Ciclo {ciclo['name']} ({ciclo['months']}): siembra {food_crop}."
+        )
 
+    parcela_nombre = parcel.parcel_id or "tu parcela"
     advisory = (
-        f"Parcela {parcel.parcel_id}: {traffic.upper()} "
+        f"Parcela {parcela_nombre}: {traffic.upper()} "
         f"(score={global_score:.2f}). "
-        f"Recomendacion: combinar {rent_crop} + {food_crop}. "
+        f"Estas en ciclo de {ciclo['name']} ({ciclo['months']}). "
+        f"Te recomendamos combinar {rent_crop} + {food_crop}. "
         f"Accion: {window.replace('_', ' ')}."
     )
 
@@ -250,6 +277,16 @@ def recommend(parcel: ParcelInput) -> Dict:
             f" Nota: la zona se ajusto automaticamente segun el departamento "
             f"({parcel.department})."
         )
+
+    recommendations: List[CropRecommendation] = [
+        CropRecommendation(
+            rent_crop=rent_crop,
+            food_crop=food_crop,
+            confidence=global_score,
+            reason=reason,
+            seasonal_context=seasonal_context,
+        )
+    ]
 
     return {
         "parcel_id": parcel.parcel_id,

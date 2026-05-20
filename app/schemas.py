@@ -115,6 +115,7 @@ class CropRecommendation(BaseModel):
     food_crop: str
     confidence: float
     reason: str
+    seasonal_context: Optional[str] = None
 
 
 class RecommendationResponse(BaseModel):
