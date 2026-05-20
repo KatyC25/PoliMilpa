@@ -44,23 +44,46 @@ ZONE_CATALOG = {
     AgroZone.HIGHLAND_HUMID: {
         "macro_region": "centro_norte",
         "rent": ["cafe", "cacao"],
-        "food": ["maiz", "frijol", "ayote", "platano"],
+        "food": ["maiz", "frijol", "papa"],
     },
     AgroZone.DRY_CORRIDOR: {
         "macro_region": "pacifico_seco",
-        "rent": ["ajonjoli", "cafe_resiliente"],
-        "food": ["sorgo", "maiz", "frijol_caupi"],
+        "rent": ["ajonjoli", "mani"],
+        "food": ["sorgo", "maiz", "frijol"],
     },
     AgroZone.SUBHUMID_CARIBBEAN: {
         "macro_region": "caribe_humedo",
-        "rent": ["cacao", "platano_comercial"],
-        "food": ["yuca", "quequisque", "malanga", "frijol_humedo"],
+        "rent": ["cacao", "platano"],
+        "food": ["yuca", "quequisque", "malanga", "arroz"],
     },
     AgroZone.TRANSITION: {
         "macro_region": "transicion",
-        "rent": ["cafe", "cacao"],
+        "rent": ["mani", "platano"],
         "food": ["frijol", "maiz", "sorgo"],
     },
+}
+
+# Catalogo departamental: cultivos reales por departamento segun datos MAG/INTA.
+# Las claves estan normalizadas (sin acentos, lowercase).
+# Si un departamento no aparece aqui, se usa ZONE_CATALOG como fallback.
+DEPARTMENT_CATALOG = {
+    "jinotega":     {"rent": ["cafe"],              "food": ["maiz", "frijol", "papa"]},
+    "matagalpa":    {"rent": ["cafe"],              "food": ["maiz", "frijol", "tomate"]},
+    "chinandega":   {"rent": ["ajonjoli"],           "food": ["sorgo", "maiz", "frijol"]},
+    "leon":         {"rent": ["mani"],              "food": ["sorgo", "maiz", "frijol"]},
+    "nueva segovia":{"rent": ["cafe"],              "food": ["frijol", "maiz", "sorgo"]},
+    "esteli":       {"rent": ["tabaco"],            "food": ["frijol", "maiz", "papa"]},
+    "madriz":       {"rent": ["ajonjoli"],           "food": ["sorgo", "maiz", "frijol"]},
+    "managua":      {"rent": ["platano"],           "food": ["maiz", "frijol", "sorgo"]},
+    "masaya":       {"rent": ["mani"],              "food": ["sorgo", "maiz", "frijol"]},
+    "granada":      {"rent": ["mani"],              "food": ["arroz", "frijol", "maiz"]},
+    "carazo":       {"rent": ["mani"],              "food": ["sorgo", "maiz", "frijol"]},
+    "rivas":        {"rent": ["platano"],           "food": ["arroz", "frijol", "sorgo"]},
+    "boaco":        {"rent": ["mani"],              "food": ["maiz", "frijol", "sorgo"]},
+    "chontales":    {"rent": ["platano"],           "food": ["yuca", "maiz", "frijol"]},
+    "raccs":        {"rent": ["cacao"],             "food": ["yuca", "quequisque", "malanga"]},
+    "raccn":        {"rent": ["cacao"],             "food": ["platano", "arroz", "yuca"]},
+    "rio san juan": {"rent": ["cacao"],             "food": ["arroz", "platano", "yuca"]},
 }
 
 DEPARTMENT_ZONE_HINTS = {
@@ -174,14 +197,19 @@ def recommend(parcel: ParcelInput) -> Dict:
     global_score = round(coverage * params["weight_cob"] + slope * params["weight_pen"], 3)
     traffic = _traffic_light(global_score, params)
 
-    catalog = ZONE_CATALOG[effective_zone]
+    dep_key = _normalize_department(parcel.department)
+    catalog = DEPARTMENT_CATALOG.get(dep_key, ZONE_CATALOG[effective_zone])
+    catalog_source = "department" if dep_key in DEPARTMENT_CATALOG else "zone"
+
     rent_crop = catalog["rent"][0]
     food_crop = catalog["food"][0]
 
     if parcel.seasonal_forecast == "dry" and "sorgo" in catalog["food"]:
         food_crop = "sorgo"
-    elif parcel.seasonal_forecast == "wet" and "frijol_humedo" in catalog["food"]:
-        food_crop = "frijol_humedo"
+    elif parcel.seasonal_forecast == "wet" and "arroz" in catalog["food"]:
+        food_crop = "arroz"
+    elif parcel.seasonal_forecast == "wet" and "quequisque" in catalog["food"]:
+        food_crop = "quequisque"
 
     window = (
         "sembrar_ahora"
