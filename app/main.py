@@ -447,8 +447,10 @@ _ZONE_INFO = {
     "norte": {
         "title": "Z1 — Húmedo de Altura",
         "subtitle": "Jinotega, Matagalpa",
-        "main_crop": {"name": "Café", "status": "Recomendado", "description": "Clima fresco y húmedo ideal para café de altura.", "benefits": ["Excelente calidad de taza", "Alta producción esperada"]},
-        "alt_crop": {"name": "Maíz", "status": "Alternativa", "description": "Cultivo tradicional con buena adaptación.", "benefits": []},
+        "temp_range": "18° – 28°C",
+        "rainfall": "1200 – 2000 mm/año",
+        "season": "Mayo – Julio",
+        "rainy_season": "Mayo – Octubre",
         "actions": [
             {"icon": "fa-tree", "title": "Sembrar con sombra", "description": "Mantener árboles de sombra para regular temperatura."},
             {"icon": "fa-leaf", "title": "Fertilización orgánica", "description": "Aplicar abono orgánico al inicio de lluvias."},
@@ -465,8 +467,10 @@ _ZONE_INFO = {
     "sur": {
         "title": "Z2 — Corredor Seco",
         "subtitle": "Madriz, Estelí, N. Segovia, León, Chinandega",
-        "main_crop": {"name": "Sorgo", "status": "Recomendado", "description": "Cultivo resistente a sequía con bajo requerimiento hídrico.", "benefits": ["Alta resistencia", "Bajo consumo de agua"]},
-        "alt_crop": {"name": "Frijol caupí", "status": "Alternativa", "description": "Leguminosa tolerante a estrés hídrico.", "benefits": []},
+        "temp_range": "25° – 35°C",
+        "rainfall": "600 – 1000 mm/año",
+        "season": "Mayo – Junio",
+        "rainy_season": "Mayo – Octubre",
         "actions": [
             {"icon": "fa-droplet", "title": "Riego complementario", "description": "Aplicar riego en momentos críticos."},
             {"icon": "fa-leaf", "title": "Mulch", "description": "Cubrir suelo para retener humedad."},
@@ -483,8 +487,10 @@ _ZONE_INFO = {
     "centro": {
         "title": "Z3 — Caribe Subhúmedo",
         "subtitle": "RACCN, RACCS, Río San Juan",
-        "main_crop": {"name": "Cacao", "status": "Recomendado", "description": "Humedad constante ideal para cacao.", "benefits": ["Excelente adaptación", "Suelo óptimo"]},
-        "alt_crop": {"name": "Yuca", "status": "Alternativa", "description": "Opción resistente y complementaria.", "benefits": []},
+        "temp_range": "24° – 30°C",
+        "rainfall": "2500 – 4000 mm/año",
+        "season": "Abril – Julio",
+        "rainy_season": "Abril – Diciembre",
         "actions": [
             {"icon": "fa-leaf", "title": "Mantener humedad", "description": "Monitorear nivel de humedad del suelo."},
             {"icon": "fa-droplet", "title": "Drenaje", "description": "Evitar exceso de agua."},
@@ -501,8 +507,10 @@ _ZONE_INFO = {
     "occidente": {
         "title": "Z4 — Zona de Transición",
         "subtitle": "Managua, Masaya, Granada, Carazo, Rivas, Boaco, Chontales",
-        "main_crop": {"name": "Café", "status": "Recomendado", "description": "Condiciones mixtas con humedad moderada.", "benefits": ["Equilibrio humedad-temperatura", "Suelo fértil"]},
-        "alt_crop": {"name": "Frijol", "status": "Alternativa", "description": "Versátil, se adapta a condiciones variables.", "benefits": []},
+        "temp_range": "22° – 32°C",
+        "rainfall": "800 – 1400 mm/año",
+        "season": "Mayo – Julio",
+        "rainy_season": "Mayo – Octubre",
         "actions": [
             {"icon": "fa-leaf", "title": "Monitorear humedad", "description": "Mantener equilibrio riego-drenaje."},
             {"icon": "fa-tree", "title": "Agroforestería", "description": "Integrar árboles con cultivos."},
@@ -530,11 +538,12 @@ _CROP_DISPLAY = {
     "cafe": "Café", "cacao": "Cacao",
     "maiz": "Maíz", "frijol": "Frijol",
     "sorgo": "Sorgo", "yuca": "Yuca",
-    "ajonjoli": "Ajonjolí", "frijol_caupi": "Frijol caupí",
-    "platano": "Plátano", "platano_comercial": "Plátano",
-    "cafe_resiliente": "Café", "ayote": "Ayote",
+    "ajonjoli": "Ajonjolí", "mani": "Maní",
+    "platano": "Plátano",
+    "papa": "Papa", "arroz": "Arroz",
+    "tabaco": "Tabaco", "chiltoma": "Chiltoma",
+    "tomate": "Tomate",
     "quequisque": "Quequisque", "malanga": "Malanga",
-    "frijol_humedo": "Frijol",
 }
 
 def _display_crop(name: str) -> str:
@@ -551,10 +560,24 @@ def get_zone_info(zone_id: str) -> ZoneInfoResponse:
         catalog = ZONE_CATALOG.get(agro_key, {})
         rent_list = catalog.get("rent", [])
         food_list = catalog.get("food", [])
+        rent_crop = _display_crop(rent_list[0]) if rent_list else ""
+        food_crop = _display_crop(food_list[0]) if food_list else ""
         info = {
             **info,
-            "rent_crop": _display_crop(rent_list[0]) if rent_list else "",
-            "food_crop": _display_crop(food_list[0]) if food_list else "",
+            "rent_crop": rent_crop,
+            "food_crop": food_crop,
+            "main_crop": {
+                "name": rent_crop,
+                "status": "Recomendado",
+                "description": f"Cultivo de renta principal para {info['title']}.",
+                "benefits": [],
+            },
+            "alt_crop": {
+                "name": food_crop,
+                "status": "Alternativa",
+                "description": f"Cultivo alimenticio complementario para {info['title']}.",
+                "benefits": [],
+            },
         }
 
     return ZoneInfoResponse(zone_id=zone_id, **info)

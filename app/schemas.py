@@ -148,6 +148,10 @@ class ZoneInfoResponse(BaseModel):
     subtitle: str
     rent_crop: str = ""
     food_crop: str = ""
+    temp_range: str = ""
+    rainfall: str = ""
+    season: str = ""
+    rainy_season: str = ""
     main_crop: Dict[str, object]
     alt_crop: Dict[str, object]
     actions: List[Dict[str, str]]

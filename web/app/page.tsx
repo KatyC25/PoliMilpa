@@ -41,8 +41,6 @@ const FALLBACK_REC: Record<string, any> = {
     rainfall: "1200 – 2000 mm/año",
     season: "Mayo – Julio",
     rainy_season: "Mayo – Octubre",
-    rent_crop: "Café",
-    food_crop: "Maíz",
     weather: { title: "Lluvias regulares", forecast: "Favorable.", days: [
       { day: "Hoy", icon: "fa-cloud-rain", temp: "24°/18°" },
       { day: "Mar", icon: "fa-cloud-rain", temp: "25°/18°" },
@@ -58,8 +56,6 @@ const FALLBACK_REC: Record<string, any> = {
     rainfall: "600 – 1000 mm/año",
     season: "Mayo – Junio",
     rainy_season: "Mayo – Octubre",
-    rent_crop: "Ajonjolí",
-    food_crop: "Sorgo",
     weather: { title: "Época seca", forecast: "Planificar riego.", days: [
       { day: "Hoy", icon: "fa-sun", temp: "28°/19°" },
       { day: "Mar", icon: "fa-sun", temp: "29°/20°" },
@@ -75,8 +71,6 @@ const FALLBACK_REC: Record<string, any> = {
     rainfall: "2500 – 4000 mm/año",
     season: "Abril – Julio",
     rainy_season: "Abril – Diciembre",
-    rent_crop: "Cacao",
-    food_crop: "Yuca",
     weather: { title: "Lluvia frecuente", forecast: "Muy favorable.", days: [
       { day: "Hoy", icon: "fa-cloud-rain", temp: "26°/21°" },
       { day: "Mar", icon: "fa-cloud-rain", temp: "26°/21°" },
@@ -92,8 +86,6 @@ const FALLBACK_REC: Record<string, any> = {
     rainfall: "800 – 1400 mm/año",
     season: "Mayo – Julio",
     rainy_season: "Mayo – Octubre",
-    rent_crop: "Café",
-    food_crop: "Frijol",
     weather: { title: "Variables", forecast: "Equilibrio.", days: [
       { day: "Hoy", icon: "fa-cloud-sun", temp: "26°/19°" },
       { day: "Mar", icon: "fa-cloud-rain", temp: "25°/18°" },
@@ -277,7 +269,7 @@ export default function Home() {
               <div className="zone-hero">
                 <div className="zone-hero-top">
                   <h1>{rec.title}</h1>
-                  <span className="zone-hero-badge">
+                  <span className="zone-hero-badge" style={{ backgroundColor: ZONE_COLORS[selectedZone ?? ""] ?? "#999" }}>
                     <i className="fa-solid fa-circle-check" />
                     Zona seleccionada
                   </span>
