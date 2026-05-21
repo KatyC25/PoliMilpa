@@ -178,7 +178,10 @@ export default function LoginPage() {
 					</label>
 
 					<button type="submit" className="login-submit" disabled={submitting}>
-						<span>{submitting ? "Entrando..." : "Iniciar sesión"}</span>
+						<span>
+							{submitting ? (
+								<><i className="fa-solid fa-circle-notch fa-spin" /> Conectando con el servidor...</>
+							) : "Iniciar sesión"}</span>
 
 						<i className="fa-solid fa-arrow-right" aria-hidden="true" />
 					</button>

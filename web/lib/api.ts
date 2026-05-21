@@ -78,11 +78,36 @@ export type LoginResponse = {
 const API_BASE_URL =
 	process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
 
+function sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithRetry(
+	url: string,
+	opts: RequestInit,
+	retries = 2,
+	delayMs = 1500,
+): Promise<Response> {
+	let lastError: Error | null = null;
+	for (let attempt = 0; attempt <= retries; attempt++) {
+		try {
+			const res = await fetch(url, opts);
+			return res;
+		} catch (err) {
+			lastError = err instanceof Error ? err : new Error(String(err));
+			if (attempt < retries) {
+				await sleep(delayMs);
+			}
+		}
+	}
+	throw lastError;
+}
+
 export async function login(
 	username: string,
 	password: string,
 ): Promise<LoginResponse> {
-	const res = await fetch(`${API_BASE_URL}/v1/auth/login`, {
+	const res = await fetchWithRetry(`${API_BASE_URL}/v1/auth/login`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ username, password }),
