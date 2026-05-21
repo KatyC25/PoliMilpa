@@ -385,6 +385,7 @@ def generate_auto_recommendation(
             if use_c3s:
                 seasonal_forecast = c3s_future.result()
     except RuntimeError as exc:
+        print(f"[503] generate_auto_recommendation fallo: {exc}")
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     rules_payload = ParcelInput(
@@ -436,6 +437,7 @@ def generate_recommendation_map_tiles(
         geometry=payload.geometry,
     )
     if tile is None:
+        print(f"[503] generate_recommendation_map_tiles: tile nulo para lat={payload.lat}, lon={payload.lon}")
         raise HTTPException(
             status_code=503,
             detail="No se pudo generar el mapa de clasificacion. Verifica GEE.",
