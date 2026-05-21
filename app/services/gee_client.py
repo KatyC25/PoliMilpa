@@ -123,9 +123,12 @@ class GEEClient:
         msavi2_value = values.get("msavi2")
         moisture_value = values.get("soil_moisture")
         slope_value = values.get("slope")
-        if msavi2_value is None or moisture_value is None or slope_value is None:
-            print(f"[GEE] valores nulos: msavi2={msavi2_value}, moisture={moisture_value}, slope={slope_value}")
+        if msavi2_value is None or moisture_value is None:
+            print(f"[GEE] valores criticos nulos: msavi2={msavi2_value}, moisture={moisture_value}")
             return None
+        if slope_value is None:
+            print(f"[GEE] slope nulo para lat={lat}, lon={lon}, usando 0.0 como fallback")
+            slope_value = 0.0
 
         msavi2_normalized = max(0.0, min(1.0, (float(msavi2_value) + 1.0) / 2.0))
         shade = msavi2_normalized
