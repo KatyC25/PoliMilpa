@@ -357,6 +357,9 @@ def generate_auto_recommendation(
         seasonal_source = "manual" if not use_c3s else "c3s"
         seasonal_forecast = payload.seasonal_forecast
 
+        if not gee_client._ensure_initialized():
+            raise RuntimeError("GEE: No se pudo inicializar Earth Engine.")
+
         with ThreadPoolExecutor(max_workers=2) as pool:
             gee_future = pool.submit(
                 gee_client.get_parcel_features,
