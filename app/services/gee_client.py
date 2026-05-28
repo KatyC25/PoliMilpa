@@ -1,6 +1,7 @@
 import datetime as dt
 import json
 import os
+import threading
 from typing import Any, Dict, Optional
 
 from app.services.cache import gee_cache
@@ -17,6 +18,7 @@ class GEEClient:
         self.project_id = os.getenv("GEE_PROJECT_ID")
         self._ee: Optional[Any] = None
         self._initialized = False
+        self._lock = threading.Lock()
 
     def _ensure_initialized(self) -> bool:
         if not self.enabled:
@@ -26,7 +28,11 @@ class GEEClient:
         if self._initialized:
             return self._ee is not None
 
-        self._initialized = True
+        with self._lock:
+            if self._initialized:
+                return self._ee is not None
+            self._initialized = True
+
         try:
             import ee  # type: ignore
 

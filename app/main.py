@@ -45,6 +45,16 @@ auth_service = AuthService()
 bearer = HTTPBearer(auto_error=False)
 
 
+@app.on_event("startup")
+def startup():
+    if gee_client.enabled:
+        print("[GEE] Inicializando en startup...")
+        ok = gee_client._ensure_initialized()
+        print(f"[GEE] Startup init: {'OK' if ok else 'FALLO'}")
+    else:
+        print("[GEE] Deshabilitado, saltando init en startup.")
+
+
 def _unauthorized(detail: str) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
