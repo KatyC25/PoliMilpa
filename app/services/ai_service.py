@@ -31,6 +31,7 @@ class AIService:
 
     def generate_advisory(self, data: AIAdvisoryInput) -> Optional[AIAdvisoryResponse]:
         if not self.enabled:
+            print("[AI] Servicio deshabilitado: GEMINI_API_KEY no configurada")
             return None
 
         prompt = f"""
@@ -64,7 +65,8 @@ Datos de la parcela:
                 advisory=parsed.get("advisory", text),
                 whatsapp_preview=parsed.get("whatsapp_preview", ""),
             )
-        except Exception:
+        except Exception as exc:
+            print(f"[AI] Error generando advisory: {exc}")
             return None
 
 
