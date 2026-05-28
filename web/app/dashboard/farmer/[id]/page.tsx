@@ -98,14 +98,15 @@ export default function FarmerDetailPage() {
         setFarmer(f);
 
         if (f.lat && f.lon) {
-          const [r, tile] = await Promise.all([
-            getAutoRecommendation(f.farmer_code, f.municipality, f.department, f.agro_zone, f.lat, f.lon),
-            fetchMapTiles(f.lat, f.lon, f.geometry, f.agro_zone).catch(() => null),
-          ]);
-          if (!cancelled) {
-            setRec(r);
-            if (tile) setTileUrl(tile.url);
-          }
+          const rPromise = getAutoRecommendation(f.farmer_code, f.municipality, f.department, f.agro_zone, f.lat, f.lon);
+          const tilePromise = fetchMapTiles(f.lat, f.lon, f.geometry, f.agro_zone).catch(() => null);
+
+          const r = await rPromise;
+          if (!cancelled) setRec(r);
+
+          tilePromise.then((tile) => {
+            if (!cancelled && tile) setTileUrl(tile.url);
+          });
 
           if (r && !cancelled) {
             setAiLoading(true);

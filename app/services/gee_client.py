@@ -116,7 +116,7 @@ class GEEClient:
         combined = ee.Image.cat([moisture, msavi2, slope]).reduceRegion(
             reducer=ee.Reducer.mean(),
             geometry=roi,
-            scale=30,
+            scale=100,
             bestEffort=True,
             maxPixels=1_000_000,
         )
@@ -156,7 +156,7 @@ class GEEClient:
         }
 
     @staticmethod
-    def _gee_date_range(months_back: int = 24) -> tuple[str, str]:
+    def _gee_date_range(months_back: int = 6) -> tuple[str, str]:
         end = dt.date.today()
         start = end - dt.timedelta(days=months_back * 30)
         return start.isoformat(), end.isoformat()
@@ -187,6 +187,7 @@ class GEEClient:
         print(f"[GEE] get_parcel_features: OK msavi2={gee_features.get('msavi2')}")
         return gee_features
 
+    @gee_cache.memoize
     def get_classification_tile(
         self,
         lat: float,
