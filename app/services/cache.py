@@ -8,7 +8,13 @@ class TTLCache:
         self.default_ttl = default_ttl
 
     def _key(self, *args: Any, **kwargs: Any) -> str:
-        parts = [str(a) for a in args] + [f"{k}={v}" for k, v in sorted(kwargs.items())]
+        parts = []
+        for a in args:
+            if isinstance(a, float):
+                parts.append(f"{a:.4f}")
+            else:
+                parts.append(str(a))
+        parts += [f"{k}={v}" for k, v in sorted(kwargs.items())]
         return ":".join(parts)
 
     def get(self, key: str) -> Optional[Any]:

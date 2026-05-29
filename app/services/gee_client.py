@@ -156,7 +156,7 @@ class GEEClient:
         }
 
     @staticmethod
-    def _gee_date_range(months_back: int = 6) -> tuple[str, str]:
+    def _gee_date_range(months_back: int = 3) -> tuple[str, str]:
         end = dt.date.today()
         start = end - dt.timedelta(days=months_back * 30)
         return start.isoformat(), end.isoformat()

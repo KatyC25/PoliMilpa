@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useAuth } from "../../../../lib/auth-context";
-import { getFarmer, getAutoRecommendation, fetchMapTiles, getAIAdvisory, type Farmer, type Recommendation } from "../../../../lib/api";
+import { getFarmer, getAutoRecommendation, type Farmer, type Recommendation } from "../../../../lib/api";
 
 const FarmMap = dynamic(() => import("../../../../components/FarmMap"), {
   ssr: false,
@@ -66,7 +66,6 @@ export default function FarmerDetailPage() {
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState("");
   const [aiAdvisory, setAiAdvisory] = useState<{ advisory: string; whatsapp_preview: string } | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState("");
@@ -98,45 +97,23 @@ export default function FarmerDetailPage() {
         setFarmer(f);
 
         if (f.lat && f.lon) {
-          const rPromise = getAutoRecommendation(f.farmer_code, f.municipality, f.department, f.agro_zone, f.lat, f.lon);
-          const tilePromise = fetchMapTiles(f.lat, f.lon, f.geometry, f.agro_zone).catch(() => null);
+          const r = await getAutoRecommendation(
+            f.farmer_code, f.municipality, f.department,
+            f.agro_zone, f.lat, f.lon, f.geometry,
+          );
 
-          const r = await rPromise;
-          if (!cancelled) setRec(r);
-
-          tilePromise.then((tile) => {
-            if (!cancelled && tile) setTileUrl(tile.url);
-          });
-
-          if (r && !cancelled) {
-            setAiLoading(true);
-            setAiError(false);
-            getAIAdvisory({
-              parcel_id: f.farmer_code,
-              traffic_light: r.traffic_light,
-              global_score: typeof r.debug_scores?.global === "number" ? r.debug_scores.global : 0,
-              rent_crop: r.recommendations[0]?.rent_crop ?? "",
-              food_crop: r.recommendations[0]?.food_crop ?? "",
-              window: r.recommended_window,
-              msavi2: typeof r.debug_scores?.msavi2 === "number" ? r.debug_scores.msavi2 : 0,
-              slope_percent: typeof r.debug_scores?.slope_percent === "number" ? r.debug_scores.slope_percent : 0,
-              soil_moisture: typeof r.debug_scores?.soil_moisture === "number" ? r.debug_scores.soil_moisture : 0,
-              seasonal_forecast: typeof r.debug_scores?.seasonal_forecast_used === "string" ? r.debug_scores.seasonal_forecast_used : "normal",
-              zone: f.agro_zone,
-              department: f.department,
-              municipality: f.municipality,
-            }).then((ai) => {
-              if (!cancelled && ai) {
-                setAiAdvisory(ai);
-                setEditText(ai.advisory);
-              } else {
-                setAiError(true);
-              }
-            }).catch(() => {
-              if (!cancelled) setAiError(true);
-            }).finally(() => {
-              if (!cancelled) setAiLoading(false);
-            });
+          if (!cancelled) {
+            setRec(r);
+            if (r?.tile_url) setTileUrl(r.tile_url);
+            if (r?.ai_advisory) {
+              setAiAdvisory({
+                advisory: r.ai_advisory,
+                whatsapp_preview: r.whatsapp_preview ?? "",
+              });
+              setEditText(r.ai_advisory);
+            } else {
+              setAiError(true);
+            }
           }
         }
       })
@@ -283,7 +260,6 @@ export default function FarmerDetailPage() {
                       <div className="fd3-ai-head">
                         <i className="fa-solid fa-wand-magic-sparkles" />
                         <h3>Asistente IA</h3>
-                        {aiLoading && <i className="fa-solid fa-circle-notch fa-spin fd3-ai-spin" />}
                       </div>
 
                       {aiAdvisory ? (
@@ -330,11 +306,6 @@ export default function FarmerDetailPage() {
                             )}
                           </div>
                         </>
-                      ) : aiLoading ? (
-                        <div className="fd3-ai-wait">
-                          <span className="fd3-ai-dots"><span /><span /><span /></span>
-                          <span>Generando...</span>
-                        </div>
                       ) : (
                         <div className="fd3-ai-empty">
                           <i className="fa-solid fa-cloud-exclamation" />

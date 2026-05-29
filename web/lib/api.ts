@@ -47,6 +47,9 @@ export type Recommendation = {
 	advisory_text: string;
 	debug_scores?: Record<string, number | string>;
 	data_source?: string;
+	tile_url?: string | null;
+	ai_advisory?: string | null;
+	whatsapp_preview?: string | null;
 };
 
 export type AIAdvisoryInput = {
@@ -153,6 +156,7 @@ export async function getAutoRecommendation(
 	agroZone: string,
 	lat: number,
 	lon: number,
+	geometry: string | null = null,
 ): Promise<Recommendation | null> {
 	const res = await fetchWithAuth("/v1/recommendations/auto", {
 		method: "POST",
@@ -164,6 +168,7 @@ export async function getAutoRecommendation(
 			agro_zone: agroZone,
 			lat,
 			lon,
+			geometry: geometry || undefined,
 		}),
 	});
 	if (!res.ok) return null;
@@ -216,5 +221,21 @@ export async function fetchDemoCases(): Promise<DemoCase[]> {
 		return (await response.json()) as DemoCase[];
 	} catch {
 		return [];
+	}
+}
+
+export async function prefetchRecommendations(
+	farmers: Array<{ lat: number; lon: number; agro_zone: string }>,
+): Promise<void> {
+	const valid = farmers.filter((f) => f.lat != null && f.lon != null);
+	if (valid.length === 0) return;
+	try {
+		await fetchWithAuth("/v1/recommendations/prefetch", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ farmers: valid }),
+		});
+	} catch {
+		// Prefetch es best-effort; ignorar errores
 	}
 }

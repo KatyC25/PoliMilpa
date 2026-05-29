@@ -37,6 +37,7 @@ class AutoParcelInput(BaseModel):
     agro_zone: AgroZone
     lat: float
     lon: float
+    geometry: Optional[str] = None
     seasonal_forecast: Optional[str] = Field(
         default=None,
         description="dry, normal o wet. Opcional; si no viene, se intenta resolver desde C3S",
@@ -126,6 +127,9 @@ class RecommendationResponse(BaseModel):
     advisory_text: str
     debug_scores: Optional[Dict[str, Union[float, str]]] = None
     data_source: Optional[str] = None
+    tile_url: Optional[str] = None
+    ai_advisory: Optional[str] = None
+    whatsapp_preview: Optional[str] = None
 
 
 class MapTileInput(BaseModel):
@@ -156,6 +160,16 @@ class ZoneInfoResponse(BaseModel):
     alt_crop: Dict[str, object]
     actions: List[Dict[str, str]]
     weather: Dict[str, object]
+
+
+class PrefetchFarmerEntry(BaseModel):
+    lat: float
+    lon: float
+    agro_zone: AgroZone
+
+
+class PrefetchInput(BaseModel):
+    farmers: List[PrefetchFarmerEntry]
 
 
 class AIAdvisoryInput(BaseModel):

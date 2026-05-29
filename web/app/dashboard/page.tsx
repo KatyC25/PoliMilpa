@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "../../lib/auth-context";
-import { getFarmers, type Farmer } from "../../lib/api";
+import { getFarmers, prefetchRecommendations, type Farmer } from "../../lib/api";
 
 const brandLogo = "/assets/logo-polimilpa.png";
 
@@ -40,7 +40,16 @@ export default function DashboardPage() {
       return;
     }
     getFarmers()
-      .then(setFarmers)
+      .then((list) => {
+        setFarmers(list);
+        prefetchRecommendations(
+          list.map((f) => ({
+            lat: f.lat!,
+            lon: f.lon!,
+            agro_zone: f.agro_zone,
+          })),
+        );
+      })
       .finally(() => setFetching(false));
   }, [token, loading, router]);
 

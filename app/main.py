@@ -16,7 +16,7 @@ from app.schemas import (
     AIAdvisoryInput, AIAdvisoryResponse, AgroZone,
     AutoParcelInput, FarmerCreate, FarmerResponse,
     LoginInput, MapTileInput, MapTileResponse,
-    ParcelInput, PublicDemoCaseResponse,
+    ParcelInput, PrefetchInput, PublicDemoCaseResponse,
     RecommendationResponse, TokenResponse,
     UserResponse, ZoneInfoResponse,
 )
@@ -370,13 +370,20 @@ def generate_auto_recommendation(
         if not gee_client._ensure_initialized():
             raise RuntimeError("GEE: No se pudo inicializar Earth Engine.")
 
-        with ThreadPoolExecutor(max_workers=2) as pool:
+        with ThreadPoolExecutor(max_workers=3) as pool:
             gee_future = pool.submit(
                 gee_client.get_parcel_features,
                 lat=payload.lat,
                 lon=payload.lon,
                 agro_zone=payload.agro_zone,
                 seasonal_forecast=seasonal_forecast or "normal",
+            )
+            tile_future = pool.submit(
+                gee_client.get_classification_tile,
+                lat=payload.lat,
+                lon=payload.lon,
+                agro_zone=payload.agro_zone,
+                geometry=payload.geometry,
             )
             if use_c3s:
                 c3s_future = pool.submit(
@@ -385,18 +392,26 @@ def generate_auto_recommendation(
                     lon=payload.lon,
                 )
 
-            futures = [gee_future]
+            futures = [gee_future, tile_future]
             if use_c3s:
                 futures.append(c3s_future)
 
             for future in as_completed(futures):
                 exc = future.exception()
-                if exc is not None:
+                if exc is not None and future is gee_future:
                     raise exc
 
             features = gee_future.result()
             if use_c3s:
                 seasonal_forecast = c3s_future.result()
+
+            tile_url = None
+            try:
+                tile_result = tile_future.result()
+                if tile_result:
+                    tile_url = tile_result["url"]
+            except Exception as exc:
+                print(f"[auto] Tile computation failed (non-fatal): {exc}")
     except RuntimeError as exc:
         print(f"[503] generate_auto_recommendation fallo: {exc}")
         raise HTTPException(status_code=503, detail=str(exc)) from exc
@@ -433,8 +448,65 @@ def generate_auto_recommendation(
     result["debug_scores"]["shade_index"] = features["shade_index"]
     result["debug_scores"]["stress_index"] = features["stress_index"]
     result["data_source"] = features.get("source", "unknown")
+    result["tile_url"] = tile_url
+
+    ai_advisory_text = None
+    whatsapp_preview_text = None
+    try:
+        ai_input = AIAdvisoryInput(
+            parcel_id=payload.parcel_id,
+            traffic_light=result["traffic_light"],
+            global_score=result["debug_scores"]["global"],
+            rent_crop=result["recommendations"][0].rent_crop,
+            food_crop=result["recommendations"][0].food_crop,
+            window=result["recommended_window"],
+            msavi2=features.get("msavi2", 0.0),
+            slope_percent=features["slope_percent"],
+            soil_moisture=features["soil_moisture"],
+            seasonal_forecast=seasonal_forecast,
+            zone=payload.agro_zone.value,
+            department=payload.department,
+            municipality=payload.municipality,
+        )
+        ai_response = ai_service.generate_advisory(ai_input)
+        if ai_response:
+            ai_advisory_text = ai_response.advisory
+            whatsapp_preview_text = ai_response.whatsapp_preview
+    except Exception as exc:
+        print(f"[auto] AI advisory failed (non-fatal): {exc}")
+
+    result["ai_advisory"] = ai_advisory_text
+    result["whatsapp_preview"] = whatsapp_preview_text
 
     return RecommendationResponse(**result)
+
+
+@app.post("/v1/recommendations/prefetch")
+def prefetch_recommendations(
+    payload: PrefetchInput,
+    user: UserIdentity = Depends(require_roles("superadmin", "admin", "tecnico")),
+) -> dict:
+    del user
+    import threading
+
+    def _warm_entry(lat: float, lon: float, agro_zone: AgroZone) -> None:
+        try:
+            gee_client.get_parcel_features(
+                lat=lat, lon=lon,
+                agro_zone=agro_zone, seasonal_forecast="normal",
+            )
+        except Exception as exc:
+            print(f"[prefetch] warm failed for lat={lat}, lon={lon}: {exc}")
+
+    for entry in payload.farmers:
+        t = threading.Thread(
+            target=_warm_entry,
+            args=(entry.lat, entry.lon, entry.agro_zone),
+        )
+        t.daemon = True
+        t.start()
+
+    return {"status": "ok", "count": len(payload.farmers)}
 
 
 @app.post("/v1/recommendations/auto/map", response_model=MapTileResponse)
