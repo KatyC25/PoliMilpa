@@ -266,7 +266,12 @@ def recommend(parcel: ParcelInput) -> Dict:
     elif food_status == "proxima" and food_fos:
         window = f"proxima: {food_fos['inicio']} al {food_fos['fin']}"
     elif food_status == "expirada":
-        window = "ventana_expirada"
+        if traffic == "verde":
+            window = "fuera de ventana optima (condiciones satelitales favorables)"
+        elif traffic == "amarillo":
+            window = "fuera de ventana optima (esperar mejora de condiciones)"
+        else:
+            window = "no_sembrar"
     else:
         window = (
             "sembrar_ahora"
@@ -315,6 +320,20 @@ def recommend(parcel: ParcelInput) -> Dict:
             f" Ventana FOS MAG para {food_crop} inicia el {food_fos['inicio']}. "
             f"Faltan {food_fos['dias_restantes']} dias."
         )
+    elif food_fos and food_fos["status"] == "expirada":
+        if traffic in ("verde", "amarillo"):
+            advisory += (
+                f" Ventana optima FOS MAG para {food_crop} ya paso "
+                f"({food_dates['inicio']} al {food_dates['fin']}), "
+                f"pero las condiciones satelitales actuales son favorables. "
+                f"Puedes sembrar evaluando riesgos."
+            )
+        else:
+            advisory += (
+                f" Ventana optima FOS MAG para {food_crop} ya paso "
+                f"({food_dates['inicio']} al {food_dates['fin']}). "
+                f"No se recomienda sembrar en este momento."
+            )
 
     if nino_alert and nino_alert["level"] == "activo_nino":
         advisory += (

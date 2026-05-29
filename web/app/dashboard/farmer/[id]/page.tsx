@@ -102,6 +102,12 @@ function FosWindows({ fos }: { fos: { activas: FosWindow[]; proximas: FosWindow[
           );
         })}
       </div>
+      <div className="fd3-fos-legend">
+        <span className="fd3-fos-legend-item"><span className="fd3-fos-status fd3-fos-status--activa" /> Activa</span>
+        <span className="fd3-fos-legend-item"><span className="fd3-fos-status fd3-fos-status--proxima" /> Próxima</span>
+        <span className="fd3-fos-legend-item"><span className="fd3-fos-status fd3-fos-status--expirada" /> Cerrada (ventana paso)</span>
+        <span className="fd3-fos-legend-item"><span className="fd3-fos-status fd3-fos-status--no_aplica" /> No aplica en zona</span>
+      </div>
     </div>
   );
 }

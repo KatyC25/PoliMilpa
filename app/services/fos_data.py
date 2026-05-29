@@ -187,10 +187,11 @@ NINO_ALERTS = {
     },
     "wet": {
         "level": "la_nina",
-        "label": "Temporada humeda",
+        "label": "La Nina activa — temporada humeda",
         "message": (
-            "Pronostico humedo detectado. Se espera precipitacion por encima "
-            "de lo habitual. Asegura buen drenaje en la parcela."
+            "Pronostico humedo detectado por C3S/ECMWF. Se espera precipitacion "
+            "por encima de lo habitual. Asegura buen drenaje en la parcela "
+            "y monitorea riesgo de inundacion."
         ),
         "precipitation_note": "Mas lluvia de lo habitual",
     },
