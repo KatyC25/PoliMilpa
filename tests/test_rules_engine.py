@@ -46,7 +46,7 @@ def test_recommendation_red_for_bad_conditions() -> None:
     assert result["traffic_light"] == "rojo"
     assert len(result["recommended_window"]) > 0
     assert result["nino_alert"] is not None
-    assert result["nino_alert"]["level"] == "activo_nino"
+    assert result["nino_alert"]["level"] == "seco"
     assert result["fos_windows"] is not None
     assert result["planting_dates"] is not None
 

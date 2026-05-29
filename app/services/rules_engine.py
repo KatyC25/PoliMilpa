@@ -335,7 +335,7 @@ def recommend(parcel: ParcelInput) -> Dict:
                 f"No se recomienda sembrar en este momento."
             )
 
-    if nino_alert and nino_alert["level"] == "activo_nino":
+    if nino_alert and nino_alert["level"] == "seco":
         advisory += (
             f" ALERTA NINO: {nino_alert['precipitation_note']}. "
             f"Prioriza cultivos tolerantes a sequia."

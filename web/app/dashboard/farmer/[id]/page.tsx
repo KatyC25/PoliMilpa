@@ -86,9 +86,9 @@ function NinoBanner({
 	if (!alert) return null;
 	const levelCls = `fd3-nino--${alert.level}`;
 	const icon =
-		alert.level === "activo_nino"
+		alert.level === "seco"
 			? "fa-solid fa-triangle-exclamation"
-			: alert.level === "la_niña"
+			: alert.level === "humedo"
 				? "fa-solid fa-cloud-rain"
 				: "fa-solid fa-circle-check";
 	return (

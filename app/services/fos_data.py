@@ -173,7 +173,7 @@ def get_crop_fos_dates(
 
 NINO_ALERTS = {
     "dry": {
-        "level": "activo_nino",
+        "level": "seco",
         "label": "Alerta Niño activo",
         "message": (
             "Pronostico seco detectado por C3S/ECMWF. "
@@ -193,7 +193,7 @@ NINO_ALERTS = {
         "precipitation_note": "Precipitacion dentro del promedio",
     },
     "wet": {
-        "level": "la_niña",
+        "level": "humedo",
         "label": "La Niña activa — temporada humeda",
         "message": (
             "Pronostico humedo detectado por C3S/ECMWF. Se espera precipitacion "
