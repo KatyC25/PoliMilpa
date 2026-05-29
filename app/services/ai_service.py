@@ -62,7 +62,7 @@ def _call_gemini(
         err_str = str(exc)
         if "429" in err_str:
             retry_secs = _extract_retry_delay(err_str)
-            if retry_secs is not None and retry_secs < 120:
+            if retry_secs is not None and retry_secs < 10:
                 print(f"[AI] 429 — esperando {retry_secs}s y reintentando...")
                 time.sleep(retry_secs)
                 try:
@@ -85,7 +85,7 @@ def _call_gemini(
                     print(f"[AI] Retry tambien fallo: {retry_exc}")
                     return None
             else:
-                print(f"[AI] 429 — quota diaria excedida, delay={retry_secs}")
+                print(f"[AI] 429 — quota diaria excedida ({retry_secs}s), omitiendo")
         elif "503" in err_str:
             print(f"[AI] 503 — Gemini no disponible temporalmente")
         else:
