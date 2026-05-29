@@ -277,6 +277,57 @@ export default function Home() {
                 <p className="zone-subtitle">{rec.subtitle ?? ""}</p>
               </div>
 
+              {rec.nino_alert && (
+                <div className={`zone-nino zone-nino--${rec.nino_alert.level}`}>
+                  <div className="zone-nino-icon">
+                    <i className={`fa-solid ${rec.nino_alert.level === "seco" ? "fa-sun" : rec.nino_alert.level === "humedo" ? "fa-cloud-rain" : "fa-circle-check"}`} />
+                  </div>
+                  <div className="zone-nino-body">
+                    <strong>{rec.nino_alert.label as string}</strong>
+                    <p>{rec.nino_alert.message as string}</p>
+                    {rec.nino_alert.disclaimer && (
+                      <span className="zone-nino-disclaimer">{rec.nino_alert.disclaimer as string}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {rec.fos_windows && (() => {
+                const all = [
+                  ...(rec.fos_windows.activas || []),
+                  ...(rec.fos_windows.proximas || []),
+                  ...(rec.fos_windows.expiradas || []),
+                  ...(rec.fos_windows.no_aplica || []),
+                ];
+                if (all.length === 0) return null;
+                return (
+                  <div className="zone-fos">
+                    <div className="zone-fos-header">
+                      <i className="fa-solid fa-calendar-check" />
+                      <h2>Ventanas de siembra (FOS MAG 2026)</h2>
+                    </div>
+                    <div className="zone-fos-grid">
+                      {all.map((w: any) => {
+                        const statusCls = w.status === "activa" ? "active" : w.status === "proxima" ? "upcoming" : "closed";
+                        const tag = w.status === "activa" ? "Activa" : w.status === "proxima" ? "Próxima" : w.status === "expirada" ? "Cerrada" : "N/A";
+                        const tagCls = w.status === "activa" ? "active" : w.status === "proxima" ? "upcoming" : "";
+                        let date = "—";
+                        if (w.status === "activa") date = `${w.inicio} – ${w.fin}`;
+                        else if (w.status === "proxima") date = `En ${w.dias_restantes} días`;
+                        return (
+                          <div key={w.fos_key} className="zone-fos-row">
+                            <span className={`zone-fos-dot ${statusCls}`} />
+                            <span className="zone-fos-crop">{w.crop}</span>
+                            <span className={`zone-fos-date ${tagCls}`}>{date}</span>
+                            <span className={`zone-fos-tag ${tagCls}`}>{tag}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div className="main-crops">
                 <div className="main-crops-header">
                   <i className="fa-solid fa-seedling" />
@@ -328,6 +379,45 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+
+              {rec.actions && rec.actions.length > 0 && (
+                <div className="zone-actions">
+                  <div className="zone-actions-header">
+                    <i className="fa-solid fa-circle-check" />
+                    <h2>Acciones esta semana</h2>
+                  </div>
+                  <div className="zone-actions-grid">
+                    {(rec.actions as any[]).map((action: any, i: number) => (
+                      <div key={i} className="zone-action-card">
+                        <div className="zone-action-icon"><i className={`fa-solid ${action.icon}`} /></div>
+                        <div>
+                          <span className="zone-action-title">{action.title}</span>
+                          <p className="zone-action-desc">{action.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {rec.weather && rec.weather.days && (
+                <div className="zone-forecast">
+                  <div className="zone-forecast-header">
+                    <i className="fa-solid fa-cloud-sun" />
+                    <h2>Pronóstico</h2>
+                    <span>{rec.weather.forecast || rec.weather.title || ""}</span>
+                  </div>
+                  <div className="zone-forecast-days">
+                    {(rec.weather.days as any[]).map((day: any, i: number) => (
+                      <div key={i} className="zone-forecast-day">
+                        <span className="zone-forecast-day-name">{day.day}</span>
+                        <i className={`fa-solid ${day.icon}`} />
+                        <span className="zone-forecast-day-temp">{day.temp}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="sat-section">
                 <div className="sat-header">

@@ -103,7 +103,14 @@ def get_active_windows(
     zone_data = FOS_2026.get(zone, {})
     result = []
     for fos_key, (status_info) in [
-        (k, get_fos_status(zone, k.replace("_110", "").replace("_75", "").replace("_120", ""), today))
+        (
+            k,
+            get_fos_status(
+                zone,
+                k.replace("_110", "").replace("_75", "").replace("_120", ""),
+                today,
+            ),
+        )
         for k in zone_data
     ]:
         if status_info is None:
@@ -186,8 +193,8 @@ NINO_ALERTS = {
         "precipitation_note": "Precipitacion dentro del promedio",
     },
     "wet": {
-        "level": "la_nina",
-        "label": "La Nina activa — temporada humeda",
+        "level": "la_niña",
+        "label": "La Niña activa — temporada humeda",
         "message": (
             "Pronostico humedo detectado por C3S/ECMWF. Se espera precipitacion "
             "por encima de lo habitual. Asegura buen drenaje en la parcela "
