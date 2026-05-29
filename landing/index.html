@@ -280,7 +280,7 @@
               role="img"
               aria-label="Mapa de zonas agroclimáticas"
             >
-              Mapa de zonas agroclimaticas
+               Mapa de zonas agroclimáticas
             </object>
             <div class="zones-legend">
               <strong>Zonas agroclimáticas</strong>
@@ -300,7 +300,7 @@
                 Fechas Óptimas de Siembra
               </p>
               <h2>Ventanas activas por zona</h2>
-              <p>Datos oficiales del MAG 2026. Actualizado al ciclo de primera.</p>
+              <p>Datos públicos del MAG. Calendario de primera 2026.</p>
             </div>
             <div id="fos-grid" class="fos-grid">
               <div class="fos-loading">
@@ -318,7 +318,7 @@
           </div>
           <div class="carousel" data-carousel>
             <div class="carousel-track steps-grid">
-              <div class="step-card">
+               <div class="step-card" data-impact="4 zonas agroclimáticas.&#xa;Datos de 3 satélites.&#xa;20+ cultivos en catálogo departamental basado en datos del MAG.">
                 <div class="step-top">
                   <span class="step-badge">01</span>
                   <div class="steps-icon" aria-hidden="true"><i class="fa-solid fa-map"></i></div>
@@ -332,10 +332,10 @@
                     alt=""
                     loading="lazy"
                     decoding="async"
-                  />
+                   />
                 </div>
               </div>
-              <div class="step-card">
+              <div class="step-card" data-impact="Pronóstico estacional ECMWF.&#xa;Te alertamos del Niño y la Niña.&#xa;Nicaragua es uno de los países más vulnerables al clima.">
                 <div class="step-top">
                   <span class="step-badge">02</span>
                   <div class="steps-icon" aria-hidden="true"><i class="fa-solid fa-cloud-sun"></i></div>
@@ -349,10 +349,10 @@
                     alt=""
                     loading="lazy"
                     decoding="async"
-                  />
+                   />
                 </div>
               </div>
-              <div class="step-card">
+               <div class="step-card" data-impact="Policultivo inteligente.&#xa;Un cultivo de renta para vender.&#xa;Un cultivo alimentario para tu mesa.&#xa;Una sola decisión.">
                 <div class="step-top">
                   <span class="step-badge">03</span>
                   <div class="steps-icon" aria-hidden="true"><i class="fa-solid fa-seedling"></i></div>
@@ -368,6 +368,39 @@
                     decoding="async"
                   />
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="ods" class="ods-section">
+          <div class="container">
+            <div class="ods-header">
+              <p class="eyebrow">
+                <i class="fa-solid fa-bullseye"></i>
+                Nuestro impacto
+              </p>
+              <h2>Contribuimos a los Objetivos de Desarrollo Sostenible</h2>
+              <p>Datos verificados de Naciones Unidas que respaldan nuestra misión.</p>
+            </div>
+            <div class="ods-grid">
+              <div class="ods-card">
+                <div class="ods-card-icon ods-2"><i class="fa-solid fa-bowl-food"></i></div>
+                <h3>ODS 2 — Hambre Cero</h3>
+                <p>El 79% de los granos básicos de Nicaragua lo producen pequeños agricultores. PoliMilpa analiza cada parcela con datos satelitales para recomendar un policultivo: un cultivo de renta y uno alimentario en la misma tierra.</p>
+                <div class="ods-card-source"><span>Fuente:</span> World Food Programme (WFP), ONU</div>
+              </div>
+              <div class="ods-card">
+                <div class="ods-card-icon ods-1"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                <h3>ODS 1 — Fin de la Pobreza</h3>
+                <p>El 70% del empleo en zonas rurales de Nicaragua depende de la agricultura. 3 de cada 10 personas viven en pobreza. Sembrar mejor marca la diferencia entre perder la cosecha o llevar ingresos a casa.</p>
+                <div class="ods-card-source"><span>Fuente:</span> World Food Programme USA</div>
+              </div>
+              <div class="ods-card">
+                <div class="ods-card-icon ods-13"><i class="fa-solid fa-earth-americas"></i></div>
+                <h3>ODS 13 — Acción por el Clima</h3>
+                <p>Nicaragua es uno de los países más vulnerables a eventos climáticos extremos: sequías, huracanes e inundaciones. PoliMilpa integra pronósticos del ECMWF y alerta del Niño y la Niña antes de sembrar.</p>
+                <div class="ods-card-source"><span>Fuente:</span> World Risk Report, citado por WFP</div>
               </div>
             </div>
           </div>
@@ -635,13 +668,7 @@
           const all = [...activas, ...(proximas || []), ...(expiradas || []), ...(noAplica || [])];
 
           if (all.length === 0) {
-            return `<div class="fos-card">
-              <div class="fos-card-head">
-                <span class="fos-card-dot legend-dot ${zone.dot}"></span>
-                <span class="fos-card-name">${zone.name}</span>
-              </div>
-              <p style="color:#888;font-size:0.82rem;margin:0;">Sin datos disponibles</p>
-            </div>`;
+            return "";
           }
 
           const rows = all.map((w) => {
