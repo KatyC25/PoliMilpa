@@ -208,14 +208,14 @@ export default function FarmerDetailPage() {
     <main className="dash-shell">
       <header className="dash-topbar">
         <div className="dash-brand">
+          <button className="dash-back" onClick={handleBack} type="button">
+            <i className="fa-solid fa-arrow-left" /> Volver
+          </button>
           <Image src={brandLogo} alt="PoliMilpa" width={36} height={36} style={{ width: "auto", height: "1.8rem" }} />
           <span className="dash-brand-name">PoliMilpa</span>
         </div>
         <div className="dash-nav">
           {user && <span className="dash-user"><i className="fa-regular fa-user" /> {user.full_name}</span>}
-          <button className="dash-back" onClick={handleBack} type="button">
-            <i className="fa-solid fa-arrow-left" /> Volver
-          </button>
         </div>
       </header>
 
