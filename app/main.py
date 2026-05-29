@@ -23,6 +23,7 @@ from app.schemas import (
 from app.services.ai_service import ai_service
 from app.services.auth_service import AuthService, UserIdentity
 from app.services.c3s_client import C3SClient
+from app.services.fos_data import get_all_windows, get_nino_alert
 from app.services.gee_client import GEEClient
 from app.services.ml_service import MLService
 from app.services.rules_engine import recommend, ZONE_CATALOG
@@ -643,12 +644,14 @@ def get_zone_info(zone_id: str) -> ZoneInfoResponse:
         raise HTTPException(status_code=404, detail=f"Zona '{zone_id}' no encontrada")
 
     agro_key = _ZONE_TO_AGRO.get(zone_id)
+    fos_windows = None
     if agro_key:
         catalog = ZONE_CATALOG.get(agro_key, {})
         rent_list = catalog.get("rent", [])
         food_list = catalog.get("food", [])
         rent_crop = _display_crop(rent_list[0]) if rent_list else ""
         food_crop = _display_crop(food_list[0]) if food_list else ""
+        fos_windows = get_all_windows(agro_key.value)
         info = {
             **info,
             "rent_crop": rent_crop,
@@ -667,7 +670,14 @@ def get_zone_info(zone_id: str) -> ZoneInfoResponse:
             },
         }
 
-    return ZoneInfoResponse(zone_id=zone_id, **info)
+    nino_alert = get_nino_alert("normal")
+
+    return ZoneInfoResponse(
+        zone_id=zone_id,
+        fos_windows=fos_windows,
+        nino_alert=nino_alert,
+        **info,
+    )
 
 
 @app.post("/v1/recommendations/ai-advisory", response_model=AIAdvisoryResponse)

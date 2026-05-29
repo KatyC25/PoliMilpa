@@ -3,6 +3,12 @@ import unicodedata
 from typing import Dict, List, Optional, Tuple
 
 from app.schemas import AgroZone, CropRecommendation, ParcelInput
+from app.services.fos_data import (
+    get_all_windows,
+    get_crop_fos_dates,
+    get_fos_status,
+    get_nino_alert,
+)
 
 
 # Parámetros calibrados desde GEE (cálculo real con Sentinel-2 + DEM)
@@ -233,13 +239,44 @@ def recommend(parcel: ParcelInput) -> Dict:
     elif parcel.seasonal_forecast == "wet" and "quequisque" in catalog["food"]:
         food_crop = "quequisque"
 
-    window = (
-        "sembrar_ahora"
-        if traffic == "verde"
-        else "esperar_7_dias"
-        if traffic == "amarillo"
-        else "no_sembrar"
-    )
+    zone_str = effective_zone.value
+    fos_all = get_all_windows(zone_str)
+    rent_fos = get_fos_status(zone_str, rent_crop)
+    food_fos = get_fos_status(zone_str, food_crop)
+
+    rent_dates = get_crop_fos_dates(zone_str, rent_crop)
+    food_dates = get_crop_fos_dates(zone_str, food_crop)
+    planting_dates = {}
+    if rent_dates:
+        planting_dates["rent_crop"] = {
+            "crop": rent_crop,
+            "inicio": rent_dates["inicio"],
+            "fin": rent_dates["fin"],
+        }
+    if food_dates:
+        planting_dates["food_crop"] = {
+            "crop": food_crop,
+            "inicio": food_dates["inicio"],
+            "fin": food_dates["fin"],
+        }
+
+    food_status = food_fos["status"] if food_fos else "sin_datos"
+    if food_status == "activa":
+        window = f"{food_dates['inicio']} al {food_dates['fin']}" if food_dates else "sembrar_ahora"
+    elif food_status == "proxima" and food_fos:
+        window = f"proxima: {food_fos['inicio']} al {food_fos['fin']}"
+    elif food_status == "expirada":
+        window = "ventana_expirada"
+    else:
+        window = (
+            "sembrar_ahora"
+            if traffic == "verde"
+            else "esperar_7_dias"
+            if traffic == "amarillo"
+            else "no_sembrar"
+        )
+
+    nino_alert = get_nino_alert(parcel.seasonal_forecast)
 
     reason = (
         f"Zona {effective_zone.value}; cobertura={coverage:.2f}, "
@@ -259,13 +296,31 @@ def recommend(parcel: ParcelInput) -> Dict:
         )
 
     parcela_nombre = parcel.parcel_id or "tu parcela"
+    window_display = window.replace("_", " ")
     advisory = (
         f"Parcela {parcela_nombre}: {traffic.upper()} "
         f"(score={global_score:.2f}). "
         f"Estas en ciclo de {ciclo['name']} ({ciclo['months']}). "
         f"Te recomendamos combinar {rent_crop} + {food_crop}. "
-        f"Accion: {window.replace('_', ' ')}."
+        f"Accion: {window_display}."
     )
+
+    if food_fos and food_fos["status"] == "activa" and food_dates:
+        advisory += (
+            f" Ventana optima FOS MAG para {food_crop}: "
+            f"{food_dates['inicio']} al {food_dates['fin']}. Estas a tiempo."
+        )
+    elif food_fos and food_fos["status"] == "proxima":
+        advisory += (
+            f" Ventana FOS MAG para {food_crop} inicia el {food_fos['inicio']}. "
+            f"Faltan {food_fos['dias_restantes']} dias."
+        )
+
+    if nino_alert and nino_alert["level"] == "activo_nino":
+        advisory += (
+            f" ALERTA NINO: {nino_alert['precipitation_note']}. "
+            f"Prioriza cultivos tolerantes a sequia."
+        )
 
     if zone_validation == "zone_adjusted_by_municipality":
         advisory += (
@@ -306,4 +361,7 @@ def recommend(parcel: ParcelInput) -> Dict:
             "zone_validation": zone_validation,
             "zone_used": effective_zone.value,
         },
+        "nino_alert": nino_alert,
+        "fos_windows": fos_all,
+        "planting_dates": planting_dates,
     }

@@ -50,6 +50,9 @@ export type Recommendation = {
 	tile_url?: string | null;
 	ai_advisory?: string | null;
 	whatsapp_preview?: string | null;
+	nino_alert?: NinoAlert | null;
+	fos_windows?: FOSResponse | null;
+	planting_dates?: PlantingDates | null;
 };
 
 export type AIAdvisoryInput = {
@@ -71,6 +74,35 @@ export type AIAdvisoryInput = {
 export type AIAdvisoryResponse = {
 	advisory: string;
 	whatsapp_preview: string;
+};
+
+export type FosWindow = {
+	crop: string;
+	fos_key: string;
+	status: "activa" | "proxima" | "expirada" | "no_aplica";
+	inicio: string;
+	fin: string;
+	dias_restantes?: number;
+	dias_desde_cierre?: number;
+};
+
+export type NinoAlert = {
+	level: string;
+	label: string;
+	message: string;
+	precipitation_note: string;
+};
+
+export type PlantingDates = {
+	rent_crop?: { crop: string; inicio: string; fin: string };
+	food_crop?: { crop: string; inicio: string; fin: string };
+};
+
+export type FOSResponse = {
+	activas: FosWindow[];
+	proximas: FosWindow[];
+	expiradas: FosWindow[];
+	no_aplica: FosWindow[];
 };
 
 export type LoginResponse = {

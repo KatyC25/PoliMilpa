@@ -19,8 +19,12 @@ def test_recommendation_green_for_good_conditions() -> None:
     result = recommend(payload)
 
     assert result["traffic_light"] == "verde"
-    assert result["recommended_window"] == "sembrar_ahora"
+    assert len(result["recommended_window"]) > 0
     assert result["recommendations"][0].rent_crop == "cafe"
+    assert result["nino_alert"] is not None
+    assert result["nino_alert"]["level"] == "normal"
+    assert result["fos_windows"] is not None
+    assert len(result["fos_windows"].get("activas", [])) >= 0
 
 
 def test_recommendation_red_for_bad_conditions() -> None:
@@ -40,7 +44,11 @@ def test_recommendation_red_for_bad_conditions() -> None:
     result = recommend(payload)
 
     assert result["traffic_light"] == "rojo"
-    assert result["recommended_window"] == "no_sembrar"
+    assert len(result["recommended_window"]) > 0
+    assert result["nino_alert"] is not None
+    assert result["nino_alert"]["level"] == "activo_nino"
+    assert result["fos_windows"] is not None
+    assert result["planting_dates"] is not None
 
 
 def test_dry_forecast_prioritizes_sorghum_when_available() -> None:

@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useAuth } from "../../../../lib/auth-context";
-import { getFarmer, getAutoRecommendation, type Farmer, type Recommendation } from "../../../../lib/api";
+import { getFarmer, getAutoRecommendation, type Farmer, type Recommendation, type FosWindow } from "../../../../lib/api";
 
 const FarmMap = dynamic(() => import("../../../../components/FarmMap"), {
   ssr: false,
@@ -44,6 +44,67 @@ const ZONE_COLORS: Record<string, string> = {
   subhumid_caribbean: "#f2c94c",
   transition: "#f2994a",
 };
+
+const FOS_STATUS_META: Record<string, { label: string; cls: string }> = {
+  activa: { label: "Activa", cls: "fd3-fos-tag--activa" },
+  proxima: { label: "Próxima", cls: "fd3-fos-tag--proxima" },
+  expirada: { label: "Cerrada", cls: "fd3-fos-tag--expirada" },
+  no_aplica: { label: "No aplica", cls: "fd3-fos-tag--no_aplica" },
+};
+
+function NinoBanner({ alert }: { alert: { level: string; label: string; message: string } }) {
+  if (!alert) return null;
+  const levelCls = `fd3-nino--${alert.level}`;
+  const icon = alert.level === "activo_nino"
+    ? "fa-solid fa-triangle-exclamation"
+    : alert.level === "la_nina"
+    ? "fa-solid fa-cloud-rain"
+    : "fa-solid fa-circle-check";
+  return (
+    <div className={`fd3-nino ${levelCls}`}>
+      <div className="fd3-nino-icon"><i className={icon} /></div>
+      <div className="fd3-nino-body">
+        <strong>{alert.label}</strong>
+        <p>{alert.message}</p>
+      </div>
+    </div>
+  );
+}
+
+function FosWindows({ fos }: { fos: { activas: FosWindow[]; proximas: FosWindow[]; expiradas: FosWindow[]; no_aplica: FosWindow[] } | null | undefined }) {
+  if (!fos) return null;
+  const all = [...(fos.activas || []), ...(fos.proximas || []), ...(fos.expiradas || []), ...(fos.no_aplica || [])];
+  if (all.length === 0) return null;
+  return (
+    <div className="fd3-fos">
+      <div className="fd3-fos-head">
+        <i className="fa-solid fa-calendar-check" />
+        <h3>Ventana de siembra (FOS MAG 2026)</h3>
+      </div>
+      <div className="fd3-fos-grid">
+        {all.map((w) => {
+          const meta = FOS_STATUS_META[w.status] ?? FOS_STATUS_META["no_aplica"];
+          const datesCls = w.status === "activa" ? "fd3-fos-dates--activa" : w.status === "proxima" ? "fd3-fos-dates--proxima" : "";
+          const datesLabel = w.status === "activa"
+            ? `${w.inicio} – ${w.fin}`
+            : w.status === "proxima"
+            ? `En ${w.dias_restantes} días`
+            : w.status === "expirada"
+            ? "Cerrada"
+            : "—";
+          return (
+            <div key={w.fos_key} className="fd3-fos-item">
+              <span className={`fd3-fos-status fd3-fos-status--${w.status}`} />
+              <span className="fd3-fos-crop">{w.crop}</span>
+              <span className={`fd3-fos-dates ${datesCls}`}>{datesLabel}</span>
+              <span className={`fd3-fos-tag ${meta.cls}`}>{meta.label}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function LoadingSkeleton() {
   return (
@@ -173,6 +234,8 @@ export default function FarmerDetailPage() {
               </span>
             </div>
 
+            {rec?.nino_alert && <NinoBanner alert={rec.nino_alert} />}
+
             <div className="fd3-body">
               <div className="fd3-left">
                 <div className="fd3-map">
@@ -217,6 +280,8 @@ export default function FarmerDetailPage() {
                     </div>
                   </>
                   ) : null}
+
+                    {rec?.fos_windows && <FosWindows fos={rec.fos_windows} />}
 
                     {rec && (
                       <div className="fd3-tech">

@@ -130,6 +130,9 @@ class RecommendationResponse(BaseModel):
     tile_url: Optional[str] = None
     ai_advisory: Optional[str] = None
     whatsapp_preview: Optional[str] = None
+    nino_alert: Optional[Dict[str, str]] = None
+    fos_windows: Optional[Dict[str, object]] = None
+    planting_dates: Optional[Dict[str, Dict[str, str]]] = None
 
 
 class MapTileInput(BaseModel):
@@ -160,6 +163,8 @@ class ZoneInfoResponse(BaseModel):
     alt_crop: Dict[str, object]
     actions: List[Dict[str, str]]
     weather: Dict[str, object]
+    fos_windows: Optional[Dict[str, object]] = None
+    nino_alert: Optional[Dict[str, str]] = None
 
 
 class PrefetchFarmerEntry(BaseModel):

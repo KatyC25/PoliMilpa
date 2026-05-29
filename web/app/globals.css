@@ -3277,3 +3277,223 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================
+   NINO ALERT BANNER
+   ============================================================ */
+
+.fd3-nino {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1.2rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.fd3-nino--activo {
+  background: linear-gradient(135deg, #fff4e6, #ffe8cc);
+  border: 1px solid #ffd8a8;
+  color: #6b3a00;
+}
+
+.fd3-nino--normal {
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  border: 1px solid #a5d6a7;
+  color: #1b5e20;
+}
+
+.fd3-nino--la_nina {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  border: 1px solid #90caf9;
+  color: #0d47a1;
+}
+
+.fd3-nino-icon {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+}
+
+.fd3-nino--activo .fd3-nino-icon {
+  background: #ff9800;
+  color: #fff;
+}
+
+.fd3-nino--normal .fd3-nino-icon {
+  background: #4caf50;
+  color: #fff;
+}
+
+.fd3-nino--la_nina .fd3-nino-icon {
+  background: #2196f3;
+  color: #fff;
+}
+
+.fd3-nino-body strong {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+
+.fd3-nino-body p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+/* ============================================================
+   FOS — FECHAS ÓPTIMAS DE SIEMBRA
+   ============================================================ */
+
+.fd3-fos {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1rem;
+}
+
+.fd3-fos-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.fd3-fos-head i {
+  color: #1a5c2e;
+  font-size: 0.9rem;
+}
+
+.fd3-fos-head h3 {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.fd3-fos-head span {
+  font-size: 0.72rem;
+  color: #999;
+  margin-left: auto;
+}
+
+.fd3-fos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.fd3-fos-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  background: #f9fafb;
+  font-size: 0.8rem;
+}
+
+.fd3-fos-status {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.fd3-fos-status--activa {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+.fd3-fos-status--proxima {
+  background: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+.fd3-fos-status--expirada {
+  background: #d1d5db;
+}
+
+.fd3-fos-status--no_aplica {
+  background: #d1d5db;
+}
+
+.fd3-fos-crop {
+  font-weight: 600;
+  color: #1a1a2e;
+  flex: 1;
+  min-width: 0;
+}
+
+.fd3-fos-dates {
+  color: #888;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.fd3-fos-dates--activa {
+  color: #166534;
+  font-weight: 500;
+}
+
+.fd3-fos-dates--proxima {
+  color: #92400e;
+}
+
+.fd3-fos-tag {
+  display: inline-block;
+  padding: 0.12rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.fd3-fos-tag--activa {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.fd3-fos-tag--proxima {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.fd3-fos-tag--expirada {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.fd3-fos-tag--no_aplica {
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+@media (max-width: 1080px) {
+  .fd3-fos-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .fd3-fos-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fd3-nino {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .fd3-nino-icon {
+    margin: 0 auto;
+  }
+}

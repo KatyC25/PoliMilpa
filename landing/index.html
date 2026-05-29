@@ -292,6 +292,25 @@
           </div>
         </section>
 
+        <section id="fos-windows" class="fos-section">
+          <div class="container">
+            <div class="fos-header">
+              <p class="eyebrow">
+                <i class="fa-solid fa-calendar-check"></i>
+                Fechas Óptimas de Siembra
+              </p>
+              <h2>Ventanas activas por zona</h2>
+              <p>Datos oficiales del MAG 2026. Actualizado al ciclo de primera.</p>
+            </div>
+            <div id="fos-grid" class="fos-grid">
+              <div class="fos-loading">
+                <i class="fa-solid fa-circle-notch"></i>
+                Cargando ventanas de siembra...
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section id="como" class="steps">
           <div class="steps-header">
             <p class="eyebrow">Cómo funciona</p>
@@ -575,42 +594,110 @@
       })();
     </script>
 
-      <script>
-        (() => {
-          const mq = '(max-width: 640px)';
-          const swap = () => {
-            const isMobile = window.matchMedia(mq).matches;
-            const el = document.querySelector('.zones-map');
-            if (!el) return;
-            if (isMobile && el.tagName.toLowerCase() === 'object') {
-              window.__zonesMapOrig = el.outerHTML;
-              const img = document.createElement('img');
-              img.className = el.className;
-              img.src = el.getAttribute('data') || '';
-              img.alt = el.getAttribute('aria-label') || '';
-              img.loading = el.getAttribute('loading') || 'lazy';
-              img.decoding = el.getAttribute('decoding') || 'async';
-              img.role = 'img';
-              el.replaceWith(img);
-            } else if (!isMobile && el.tagName.toLowerCase() === 'img' && window.__zonesMapOrig) {
-              const wrapper = document.createElement('div');
-              wrapper.innerHTML = window.__zonesMapOrig;
-              const obj = wrapper.firstElementChild;
-              el.replaceWith(obj);
-            }
-          };
+    <script>
+      (() => {
+        const API_BASE = window.location.origin.includes("localhost") || window.location.origin.includes("127.0.0.1")
+          ? "http://127.0.0.1:8000"
+          : window.location.origin;
 
-          swap();
-          let last = window.matchMedia(mq).matches;
-          window.addEventListener('resize', () => {
-            const now = window.matchMedia(mq).matches;
-            if (now !== last) {
-              last = now;
-              swap();
+        const ZONES = [
+          { id: "norte", name: "Z1 Húmedo de Altura", dot: "highland" },
+          { id: "sur", name: "Z2 Corredor Seco", dot: "dry" },
+          { id: "centro", name: "Z3 Caribe Subhúmedo", dot: "subhumid" },
+          { id: "occidente", name: "Z4 Transición", dot: "transition" },
+        ];
+
+        const TAG_LABELS = {
+          activa: { label: "Activa", cls: "active" },
+          proxima: { label: "Próxima", cls: "upcoming" },
+          expirada: { label: "Cerrada", cls: "closed" },
+          no_aplica: { label: "N/A", cls: "na" },
+        };
+
+        const STATUS_CLS = { activa: "active", proxima: "upcoming", expirada: "closed", no_aplica: "na" };
+
+        async function fetchZone(zoneId) {
+          try {
+            const res = await fetch(`${API_BASE}/v1/zones/${zoneId}`);
+            if (!res.ok) return null;
+            return res.json();
+          } catch {
+            return null;
+          }
+        }
+
+        function renderCard(zone, data) {
+          const fos = data?.fos_windows;
+          const activas = fos?.activas || [];
+          const proximas = fos?.proximas || [];
+          const expiradas = fos?.expiradas || [];
+          const noAplica = fos?.no_aplica || [];
+          const all = [...activas, ...(proximas || []), ...(expiradas || []), ...(noAplica || [])];
+
+          if (all.length === 0) {
+            return `<div class="fos-card">
+              <div class="fos-card-head">
+                <span class="fos-card-dot legend-dot ${zone.dot}"></span>
+                <span class="fos-card-name">${zone.name}</span>
+              </div>
+              <p style="color:#888;font-size:0.82rem;margin:0;">Sin datos disponibles</p>
+            </div>`;
+          }
+
+          const rows = all.map((w) => {
+            const statusCls = STATUS_CLS[w.status] || "na";
+            const tag = TAG_LABELS[w.status] || TAG_LABELS["no_aplica"];
+            let dateStr = "—";
+            if (w.status === "activa") {
+              dateStr = `${w.inicio} – ${w.fin}`;
+            } else if (w.status === "proxima" && w.dias_restantes != null) {
+              dateStr = `En ${w.dias_restantes} días`;
+            } else if (w.status === "proxima") {
+              dateStr = w.inicio;
             }
-          });
-        })();
-      </script>
+            return `<div class="fos-crop-row">
+              <span class="fos-crop-dot ${statusCls}"></span>
+              <span class="fos-crop-name">${w.crop}</span>
+              <span class="fos-crop-date">${dateStr}</span>
+              <span class="fos-crop-tag ${tag.cls}">${tag.label}</span>
+            </div>`;
+          }).join("");
+
+          const activasCount = activas.length;
+          let note = "";
+          if (activasCount > 0) {
+            note = `<div class="fos-card-note"><i class="fa-solid fa-circle-check"></i>${activasCount} cultivo(s) en ventana</div>`;
+          }
+
+          return `<div class="fos-card">
+            <div class="fos-card-head">
+              <span class="fos-card-dot legend-dot ${zone.dot}"></span>
+              <span class="fos-card-name">${zone.name}</span>
+            </div>
+            <div class="fos-card-list">${rows}</div>
+            ${note}
+          </div>`;
+        }
+
+        async function loadFOS() {
+          const grid = document.getElementById("fos-grid");
+          if (!grid) return;
+
+          const results = await Promise.all(ZONES.map(async (z) => {
+            const data = await fetchZone(z.id);
+            return { zone: z, data };
+          }));
+
+          grid.innerHTML = results.map(({ zone, data }) => renderCard(zone, data)).join("");
+
+          if (grid.classList.contains("reveal")) {
+            grid.classList.add("is-visible");
+          }
+        }
+
+        loadFOS();
+      })();
+    </script>
 
     <script>
       (() => {
