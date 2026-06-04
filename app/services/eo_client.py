@@ -243,8 +243,15 @@ class EOClient:
             [lon - 0.003, lat - 0.003, lon + 0.003, lat + 0.003],
             crs=CRS.WGS84,
         )
+        d = 0.001
         geom = Geometry(
-            {"type": "Point", "coordinates": [lon, lat]},
+            {"type": "Polygon", "coordinates": [[
+                [lon - d, lat - d],
+                [lon + d, lat - d],
+                [lon + d, lat + d],
+                [lon - d, lat + d],
+                [lon - d, lat - d],
+            ]]},
             crs=CRS.WGS84,
         )
 
