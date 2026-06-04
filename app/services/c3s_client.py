@@ -25,7 +25,11 @@ class C3SClient:
         self.wet_threshold = float(os.getenv("C3S_WET_THRESHOLD", "0.14"))
 
     def _build_request(self, lat: float, lon: float) -> dict:
-        now = dt.datetime.utcnow()
+        today = dt.date.today()
+        if today.month == 1:
+            year, month = today.year - 1, 12
+        else:
+            year, month = today.year, today.month - 1
         north = min(90.0, lat + 0.5)
         south = max(-90.0, lat - 0.5)
         west = max(-180.0, lon - 0.5)
@@ -36,8 +40,8 @@ class C3SClient:
             "system": [self.system],
             "variable": [self.variable],
             "product_type": ["monthly_mean"],
-            "year": [f"{now.year:04d}"],
-            "month": [f"{now.month:02d}"],
+            "year": [f"{year:04d}"],
+            "month": [f"{month:02d}"],
             "leadtime_month": [self.leadtime_month],
             "area": [north, west, south, east],
         }

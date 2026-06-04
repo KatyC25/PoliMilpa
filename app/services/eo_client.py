@@ -161,7 +161,7 @@ class EOClient:
         config.sh_client_id = client_id
         config.sh_client_secret = client_secret
         config.sh_base_url = "https://sh.dataspace.copernicus.eu"
-        config.sh_token_url = "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token"
+        config.sh_auth_base_url = "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect"
         if instance_id:
             config.instance_id = instance_id
         self._config = config
