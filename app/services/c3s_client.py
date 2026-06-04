@@ -89,7 +89,11 @@ class C3SClient:
             target = tmp.name
 
         try:
-            client = cdsapi.Client(quiet=True)
+            client = cdsapi.Client(
+                url=os.getenv("CDSAPI_URL", "https://cds.climate.copernicus.eu/api"),
+                key=os.getenv("CDSAPI_KEY"),
+                quiet=True,
+            )
             client.retrieve(self.dataset, request, target)
             return self._extract_precip_value(target)
         except Exception as exc:

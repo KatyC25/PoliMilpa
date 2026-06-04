@@ -63,6 +63,21 @@ function evaluatePixel(sample) {
 """
 
 
+DEM_EVALSCRIPT = """
+//VERSION=3
+function setup() {
+  return {
+    input: ["DEM", "dataMask"],
+    output: { id: "dem", bands: 1, sampleType: SampleType.FLOAT32 }
+  };
+}
+function evaluatePixel(sample) {
+  if (!sample.dataMask) return [NaN];
+  return [sample.DEM];
+}
+"""
+
+
 def _classification_evalscript(zp: Dict[str, float]) -> str:
     return f"""//VERSION=3
 function setup() {{
@@ -202,27 +217,42 @@ class EOClient:
     ) -> Optional[float]:
         if not self._config:
             return None
-        input_kwargs = dict(time_interval=time_range)
+        input_kwargs: Dict[str, Any] = dict(data_collection=collection, time_interval=time_range)
         if maxcc is not None:
             input_kwargs["maxcc"] = maxcc
 
         try:
-            request = SentinelHubStatistical(
-                aggregation="MEAN",
+            aggregation = SentinelHubStatistical.aggregation(
                 evalscript=evalscript,
-                input_data=[
-                    SentinelHubStatistical.input_data(collection, **input_kwargs)
-                ],
+                time_interval=time_range,
+                aggregation_interval="P1D",
+                resolution=(100, 100),
+            )
+            request = SentinelHubStatistical(
+                aggregation=aggregation,
+                input_data=[SentinelHubStatistical.input_data(**input_kwargs)],
                 bbox=bbox,
                 geometry=geometry,
-                resolution=(100, 100),
                 config=self._config,
             )
-            data = request.get_data()
+            data = request.get_data(show_progress=False)
             if data and len(data) > 0:
-                val = data[0].get("msavi2") or data[0].get("vv") or data[0].get("DEM")
-                if val is not None and not math.isnan(float(val)):
-                    return float(val)
+                item = data[0]
+                if isinstance(item, dict):
+                    outputs = item.get("outputs", item)
+                    for _key, band_data in outputs.items():
+                        if isinstance(band_data, dict):
+                            bands = band_data.get("bands", band_data)
+                            if isinstance(bands, dict):
+                                for _bk, stats in bands.items():
+                                    if isinstance(stats, dict) and "stats" in stats:
+                                        val = stats["stats"].get("mean")
+                                        if val is not None and not math.isnan(float(val)):
+                                            return float(val)
+                            if isinstance(bands, (int, float)) and not math.isnan(float(bands)):
+                                return float(bands)
+                if isinstance(item, (int, float)) and not math.isnan(float(item)):
+                    return float(item)
         except Exception as exc:
             print(f"[EO] Statistical query error: {exc}")
         return None
@@ -271,7 +301,7 @@ class EOClient:
             moisture = max(0.0, min(1.0, (vv_raw + 18) / 13))
 
         dem_val = self._statistical_query(
-            "//VERSION=3\nfunction setup(){return{input:['DEM','dataMask'],output:{bands:1,sampleType:SampleType.FLOAT32}};}\nfunction evaluatePixel(s){return s.dataMask?[s.DEM]:[NaN];}",
+            DEM_EVALSCRIPT,
             DataCollection.DEM,
             bbox, ("2010-01-01", "2015-12-31"), geometry=geom,
         )
