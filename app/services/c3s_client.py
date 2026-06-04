@@ -98,8 +98,9 @@ class C3SClient:
             return self._extract_precip_value(target)
         except Exception as exc:
             raise RuntimeError(
-                "Fallo consulta a C3S. Verifica .cdsapirc, terminos del dataset y parametros "
-                f"(dataset={self.dataset}, variable={self.variable})."
+                "Fallo consulta a C3S. "
+                f"(dataset={self.dataset}, variable={self.variable}, "
+                f"error={exc})"
             ) from exc
         finally:
             try:
