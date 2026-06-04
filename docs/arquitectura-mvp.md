@@ -4,14 +4,14 @@
 Construir un flujo funcional que genere recomendaciones de policultivo por parcela usando datos satelitales y reglas agroclimaticas.
 
 ## Componentes
-1. Ingesta satelital: Google Earth Engine (GEE) con colecciones Sentinel y DEM.
+1. Ingesta satelital: Sentinel Hub CDSE (Statistical API + OGC WMS) con colecciones Sentinel y DEM.
 2. Motor de decision: API FastAPI con reglas por zona agroclimatica.
 3. Entrega: mensaje corto para WhatsApp/SMS.
 4. Validacion: tecnico de cooperativa compara recomendacion con observacion de campo.
 
 ## Flujo
 1. Se recibe parcela (poligono o punto) y zona agroclimatica.
-2. GEE calcula variables semanales: humedad proxy, cobertura/sombra, pendiente.
+2. Sentinel Hub CDSE calcula variables: humedad proxy, cobertura/sombra, pendiente.
 3. API calcula score y recomienda combinacion renta + alimentario.
 4. Se emite salida Verde/Amarillo/Rojo + texto accionable.
 

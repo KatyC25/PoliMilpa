@@ -7,7 +7,7 @@ Estado actual del repo:
 - Login JWT con roles (`superadmin`, `admin`, `tecnico`).
 - CRUD de agricultores.
 - Recomendacion manual (`/v1/recommendations`).
-- Recomendacion automatica (`/v1/recommendations/auto`) con GEE + C3S.
+- Recomendacion automatica (`/v1/recommendations/auto`) con Sentinel Hub CDSE + C3S.
 - Endpoints publicos de demo (`/v1/demo/cases`).
 - Persistencia local con SQLite por defecto.
 
@@ -57,11 +57,11 @@ DATABASE_URL=sqlite:///./polimilpa.db
 POLIMILPA_USERS_JSON={"superadmin":{"password":"<cambia-esto>","role":"superadmin","full_name":"Super Administrador"},"admin":{"password":"<cambia-esto>","role":"admin","full_name":"Administrador"},"tecnico":{"password":"<cambia-esto>","role":"tecnico","full_name":"Tecnico"}}
 ```
 
-## GEE integrado
+## Sentinel Hub CDSE integrado
 
-`/v1/recommendations/auto` usa Google Earth Engine para calcular features de parcela.
+`/v1/recommendations/auto` usa Sentinel Hub (Statistical API + OGC WMS) sobre Copernicus Data Space Ecosystem para calcular features de parcela.
 
-Si no hay autenticacion o configuracion de GEE, el endpoint responde `503`.
+Si no hay credenciales de CDSE, el endpoint usa datos precargados de respaldo.
 
 Autenticacion inicial:
 

@@ -11,7 +11,7 @@ from app.services.cache import TTLCache
 
 _SYSTEM_PROMPT = """
 Eres un asistente agroclimatico experto en agricultura de Nicaragua.
-Recibes datos de una parcela (GEE + C3S + reglas de negocio) y debes
+Recibes datos de una parcela (Sentinel Hub CDSE + C3S + reglas de negocio) y debes
 generar un advisory natural y util para el productor.
 
 Devuelve SOLO un JSON con dos campos:

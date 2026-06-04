@@ -3,15 +3,15 @@
 ## Copernicus y satelital
 1. Sentinel-2 SR
 - Uso: cobertura vegetal, MSAVI2, vigor.
-- Acceso rapido: Google Earth Engine dataset `COPERNICUS/S2_SR_HARMONIZED`.
+- Acceso rapido: Sentinel Hub CDSE via Statistical API (`SENTINEL2_L2A`).
 
 2. Sentinel-1 GRD
 - Uso: informacion de suelo bajo nubosidad, proxy de humedad.
-- Acceso rapido: Google Earth Engine dataset `COPERNICUS/S1_GRD`.
+- Acceso rapido: Sentinel Hub CDSE via Statistical API (`SENTINEL1_GRD`).
 
 3. Copernicus DEM GLO-30
 - Uso: pendiente, escorrentia, estabilidad de ladera.
-- Acceso rapido: Google Earth Engine dataset `COPERNICUS/DEM/GLO30`.
+- Acceso rapido: Sentinel Hub CDSE via Statistical API (`COPERNICUS_30`).
 
 ## API oficial Copernicus (cuando escales)
 - Copernicus Data Space Ecosystem: catalogo y descarga de productos Sentinel.
@@ -31,5 +31,5 @@
 - Uso: calibracion y evidencia de impacto.
 
 ## Recomendacion de integracion
-- MVP hackathon: GEE + reglas + validacion de tecnico.
+- MVP hackathon: Sentinel Hub CDSE + C3S + reglas + validacion de tecnico.
 - Post-hackathon: integrar INETER/INTA en una tabla maestra de reglas.

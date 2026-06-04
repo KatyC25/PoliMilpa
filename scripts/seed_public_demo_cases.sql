@@ -23,7 +23,7 @@ VALUES (
     -86.586334,
     'Semaforo AMARILLO: sembrar frijol + maiz en zona de menor pendiente esta semana. Evitar sectores con pendiente alta y reforzar cobertura de suelo.',
     'Don Ramon, recomendacion PoliMilpa: esta semana siembra frijol + maiz en las zonas de menor pendiente. Evita laderas fuertes y conserva cobertura para retener humedad.',
-    'Finca Espinoza - GEE MSAVI2 + pendiente + semaforo',
+    'Finca Espinoza - Sentinel Hub CDSE MSAVI2 + pendiente + semaforo',
     true,
     now(),
     now()
@@ -67,7 +67,7 @@ VALUES (
     -85.78215,
     'Semaforo AMARILLO: sembrar frijol + maiz en zonas aptas del lote y evitar sectores con mayor pendiente. Priorizar cobertura para conservar humedad y reducir escorrentia.',
     'Recomendacion PoliMilpa: esta semana priorizar frijol + maiz en areas de menor pendiente dentro de Finca Las Flores. Mantener cobertura del suelo para proteger humedad.',
-    'Finca Las Flores - GEE MSAVI2 + pendiente + semaforo',
+    'Finca Las Flores - Sentinel Hub CDSE MSAVI2 + pendiente + semaforo',
     true,
     now(),
     now()
