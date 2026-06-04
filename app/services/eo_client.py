@@ -208,7 +208,7 @@ class EOClient:
 
         try:
             request = SentinelHubStatistical(
-                aggregation=SentinelHubStatistical.aggregation.MEAN,
+                aggregation="MEAN",
                 evalscript=evalscript,
                 input_data=[
                     SentinelHubStatistical.input_data(collection, **input_kwargs)
@@ -263,7 +263,7 @@ class EOClient:
         norm = max(0.0, min(1.0, (msavi2_val + 1.0) / 2.0))
 
         vv_raw = self._statistical_query(
-            SOIL_MOISTURE_EVALSCRIPT, DataCollection.SENTINEL1_GRD,
+            SOIL_MOISTURE_EVALSCRIPT, DataCollection.SENTINEL1_IW,
             bbox, (start, end), geometry=geom,
         )
         moisture = 0.35
@@ -272,7 +272,7 @@ class EOClient:
 
         dem_val = self._statistical_query(
             "//VERSION=3\nfunction setup(){return{input:['DEM','dataMask'],output:{bands:1,sampleType:SampleType.FLOAT32}};}\nfunction evaluatePixel(s){return s.dataMask?[s.DEM]:[NaN];}",
-            DataCollection.DEM_COPERNICUS_30,
+            DataCollection.DEM,
             bbox, ("2010-01-01", "2015-12-31"), geometry=geom,
         )
         slope_pct = 5.0
