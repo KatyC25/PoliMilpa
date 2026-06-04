@@ -57,7 +57,7 @@ function ToggleTileLayer({ satellite }: { satellite: boolean }) {
   useEffect(() => {
     const toRemove: L.TileLayer[] = [];
     map.eachLayer((layer) => {
-      if (layer instanceof L.TileLayer && layer.options.attribution !== "gee-classification") {
+      if (layer instanceof L.TileLayer && layer.options.attribution !== "eo-classification") {
         toRemove.push(layer);
       }
     });
@@ -71,9 +71,21 @@ function ToggleTileLayer({ satellite }: { satellite: boolean }) {
   return null;
 }
 
-function ClassificationOverlay({ url }: { url: string | null }) {
+function ClassificationOverlay({
+  url,
+  tileType,
+  tileLayers,
+  tileBounds,
+  geometry,
+}: {
+  url: string | null;
+  tileType: string | null;
+  tileLayers: string | null;
+  tileBounds: number[][] | null;
+  geometry: string | null;
+}) {
   const map = useMap();
-  const layerRef = useRef<L.TileLayer | null>(null);
+  const layerRef = useRef<L.TileLayer.WMS | L.ImageOverlay | null>(null);
 
   useEffect(() => {
     if (layerRef.current) {
@@ -81,13 +93,53 @@ function ClassificationOverlay({ url }: { url: string | null }) {
       layerRef.current = null;
     }
     if (!url) return;
-    const layer = L.tileLayer(url, {
-      attribution: "gee-classification",
-      opacity: 0.65,
-      maxZoom: 19,
-    }).addTo(map);
-    layerRef.current = layer;
-  }, [url, map]);
+
+    if (tileType === "wms" && tileLayers) {
+      const layer = L.tileLayer.wms(url, {
+        layers: tileLayers,
+        format: "image/png",
+        transparent: true,
+        version: "1.3.0",
+        attribution: "eo-classification",
+        opacity: 0.65,
+      }).addTo(map);
+      layerRef.current = layer;
+      return;
+    }
+
+    if (url.includes("{z}")) {
+      const layer = L.tileLayer(url, {
+        attribution: "eo-classification",
+        opacity: 0.65,
+        maxZoom: 19,
+      }).addTo(map);
+      layerRef.current = layer as unknown as L.TileLayer.WMS;
+      return;
+    }
+
+    let bounds: L.LatLngBounds | null = null;
+    if (tileBounds && tileBounds.length === 2) {
+      bounds = L.latLngBounds(
+        L.latLng(tileBounds[0][0], tileBounds[0][1]),
+        L.latLng(tileBounds[1][0], tileBounds[1][1]),
+      );
+    } else if (geometry) {
+      try {
+        const geo = JSON.parse(geometry);
+        bounds = L.geoJSON(geo).getBounds();
+      } catch {
+        // fallback
+      }
+    }
+
+    if (bounds && bounds.isValid()) {
+      const layer = L.imageOverlay(url, bounds, {
+        opacity: 0.65,
+        attribution: "eo-classification",
+      }).addTo(map);
+      layerRef.current = layer;
+    }
+  }, [url, tileType, tileLayers, tileBounds, geometry, map]);
 
   return null;
 }
@@ -114,6 +166,9 @@ export default function FarmMap({
   lon,
   trafficLight = null,
   tileUrl = null,
+  tileBounds = null,
+  tileType = null,
+  tileLayers = null,
   satellite: initialSatellite = true,
 }: {
   geometry: string | null;
@@ -121,6 +176,9 @@ export default function FarmMap({
   lon: number | null;
   trafficLight?: string | null;
   tileUrl?: string | null;
+  tileBounds?: number[][] | null;
+  tileType?: string | null;
+  tileLayers?: string | null;
   satellite?: boolean;
 }) {
   const [satellite, setSatellite] = useState(initialSatellite);
@@ -157,7 +215,13 @@ export default function FarmMap({
         scrollWheelZoom={true}
       >
         <ToggleTileLayer satellite={satellite} />
-        <ClassificationOverlay url={tileUrl} />
+        <ClassificationOverlay
+          url={tileUrl}
+          tileType={tileType}
+          tileLayers={tileLayers}
+          tileBounds={tileBounds}
+          geometry={geometry}
+        />
         <FitBoundsControl geometry={geometry} />
         {geoJson ? (
           <GeoJSON

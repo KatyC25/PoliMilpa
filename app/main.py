@@ -24,7 +24,7 @@ from app.services.ai_service import ai_service
 from app.services.auth_service import AuthService, UserIdentity
 from app.services.c3s_client import C3SClient
 from app.services.fos_data import get_all_windows, get_nino_alert
-from app.services.gee_client import GEEClient
+from app.services.eo_client import EOClient
 from app.services.ml_service import MLService
 from app.services.rules_engine import recommend, ZONE_CATALOG
 from app.services.area_utils import compute_area
@@ -39,7 +39,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-gee_client = GEEClient()
+eo_client = EOClient()
 c3s_client = C3SClient()
 ml_service = MLService()
 auth_service = AuthService()
@@ -48,12 +48,8 @@ bearer = HTTPBearer(auto_error=False)
 
 @app.on_event("startup")
 def startup():
-    if gee_client.enabled:
-        print("[GEE] Inicializando en startup...")
-        ok = gee_client._ensure_initialized()
-        print(f"[GEE] Startup init: {'OK' if ok else 'FALLO'}")
-    else:
-        print("[GEE] Deshabilitado, saltando init en startup.")
+    ok = eo_client._ensure_initialized()
+    print(f"[EO] Startup init: {'OK' if ok else 'FALLO - configura SH_CLIENT_ID/SH_CLIENT_SECRET en .env'}")
 
 
 def _unauthorized(detail: str) -> HTTPException:
@@ -368,19 +364,19 @@ def generate_auto_recommendation(
         seasonal_source = "manual" if not use_c3s else "c3s"
         seasonal_forecast = payload.seasonal_forecast
 
-        if not gee_client._ensure_initialized():
-            raise RuntimeError("GEE: No se pudo inicializar Earth Engine.")
+        if not eo_client._ensure_initialized():
+            raise RuntimeError("EO: sin datos. Configura SH_CLIENT_ID/SH_CLIENT_SECRET o coloca eo_parcels.json en data/.")
 
         with ThreadPoolExecutor(max_workers=3) as pool:
-            gee_future = pool.submit(
-                gee_client.get_parcel_features,
+            eo_future = pool.submit(
+                eo_client.get_parcel_features,
                 lat=payload.lat,
                 lon=payload.lon,
                 agro_zone=payload.agro_zone,
                 seasonal_forecast=seasonal_forecast or "normal",
             )
             tile_future = pool.submit(
-                gee_client.get_classification_tile,
+                eo_client.get_classification_tile,
                 lat=payload.lat,
                 lon=payload.lon,
                 agro_zone=payload.agro_zone,
@@ -393,24 +389,30 @@ def generate_auto_recommendation(
                     lon=payload.lon,
                 )
 
-            futures = [gee_future, tile_future]
+            futures = [eo_future, tile_future]
             if use_c3s:
                 futures.append(c3s_future)
 
             for future in as_completed(futures):
                 exc = future.exception()
-                if exc is not None and future is gee_future:
+                if exc is not None and future is eo_future:
                     raise exc
 
-            features = gee_future.result()
+            features = eo_future.result()
             if use_c3s:
                 seasonal_forecast = c3s_future.result()
 
             tile_url = None
+            tile_bounds = None
+            tile_type = None
+            tile_layers = None
             try:
                 tile_result = tile_future.result()
                 if tile_result:
                     tile_url = tile_result["url"]
+                    tile_bounds = tile_result.get("bounds")
+                    tile_type = tile_result.get("type")
+                    tile_layers = tile_result.get("layers")
             except Exception as exc:
                 print(f"[auto] Tile computation failed (non-fatal): {exc}")
     except RuntimeError as exc:
@@ -450,6 +452,9 @@ def generate_auto_recommendation(
     result["debug_scores"]["stress_index"] = features["stress_index"]
     result["data_source"] = features.get("source", "unknown")
     result["tile_url"] = tile_url
+    result["tile_bounds"] = tile_bounds
+    result["tile_type"] = tile_type
+    result["tile_layers"] = tile_layers
 
     ai_advisory_text = None
     whatsapp_preview_text = None
@@ -492,7 +497,7 @@ def prefetch_recommendations(
 
     def _warm_entry(lat: float, lon: float, agro_zone: AgroZone) -> None:
         try:
-            gee_client.get_parcel_features(
+            eo_client.get_parcel_features(
                 lat=lat, lon=lon,
                 agro_zone=agro_zone, seasonal_forecast="normal",
             )
@@ -516,7 +521,7 @@ def generate_recommendation_map_tiles(
     user: UserIdentity = Depends(require_roles("superadmin", "admin", "tecnico")),
 ) -> MapTileResponse:
     del user
-    tile = gee_client.get_classification_tile(
+    tile = eo_client.get_classification_tile(
         lat=payload.lat,
         lon=payload.lon,
         agro_zone=payload.agro_zone,
@@ -526,7 +531,7 @@ def generate_recommendation_map_tiles(
         print(f"[503] generate_recommendation_map_tiles: tile nulo para lat={payload.lat}, lon={payload.lon}")
         raise HTTPException(
             status_code=503,
-            detail="No se pudo generar el mapa de clasificacion. Verifica GEE.",
+            detail="No se pudo generar el mapa de clasificacion. Verifica datos EO.",
         )
     return MapTileResponse(url=tile["url"], center=tile["center"], zoom=16)
 

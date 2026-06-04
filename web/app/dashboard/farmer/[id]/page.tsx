@@ -197,6 +197,9 @@ export default function FarmerDetailPage() {
 	const [farmer, setFarmer] = useState<Farmer | null>(null);
 	const [rec, setRec] = useState<Recommendation | null>(null);
 	const [tileUrl, setTileUrl] = useState<string | null>(null);
+	const [tileBounds, setTileBounds] = useState<number[][] | null>(null);
+	const [tileType, setTileType] = useState<string | null>(null);
+	const [tileLayers, setTileLayers] = useState<string | null>(null);
 	const [fetching, setFetching] = useState(true);
 	const [error, setError] = useState("");
 	const [aiAdvisory, setAiAdvisory] = useState<{
@@ -247,6 +250,9 @@ export default function FarmerDetailPage() {
 					if (!cancelled) {
 						setRec(r);
 						if (r?.tile_url) setTileUrl(r.tile_url);
+						if (r?.tile_bounds) setTileBounds(r.tile_bounds);
+						if (r?.tile_type) setTileType(r.tile_type);
+						if (r?.tile_layers) setTileLayers(r.tile_layers);
 						if (r?.ai_advisory) {
 							setAiAdvisory({
 								advisory: r.ai_advisory,
@@ -343,6 +349,9 @@ export default function FarmerDetailPage() {
 										lon={farmer.lon}
 										trafficLight={rec?.traffic_light ?? null}
 										tileUrl={tileUrl}
+										tileBounds={tileBounds}
+										tileType={tileType}
+										tileLayers={tileLayers}
 									/>
 								</div>
 

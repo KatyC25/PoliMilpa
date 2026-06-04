@@ -1,4 +1,4 @@
-# Random Forest en Agroni (fase 2)
+# Random Forest en PoliMilpa (fase 2)
 
 ## Objetivo
 Mejorar la precision de recomendacion reemplazando parte de reglas fijas por un modelo supervisado.

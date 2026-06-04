@@ -1,4 +1,4 @@
-# Arquitectura MVP Agroni
+# Arquitectura MVP PoliMilpa
 
 ## Objetivo tecnico (hackathon)
 Construir un flujo funcional que genere recomendaciones de policultivo por parcela usando datos satelitales y reglas agroclimaticas.

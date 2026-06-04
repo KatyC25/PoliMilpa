@@ -48,6 +48,9 @@ export type Recommendation = {
 	debug_scores?: Record<string, number | string>;
 	data_source?: string;
 	tile_url?: string | null;
+	tile_bounds?: number[][] | null;
+	tile_type?: string | null;
+	tile_layers?: string | null;
 	ai_advisory?: string | null;
 	whatsapp_preview?: string | null;
 	nino_alert?: NinoAlert | null;

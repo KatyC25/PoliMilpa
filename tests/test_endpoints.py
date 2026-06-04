@@ -87,15 +87,15 @@ def test_recommendations_endpoint() -> None:
     assert len(payload["recommendations"]) == 1
 
 
-def test_auto_recommendations_endpoint_requires_gee() -> None:
-    def _raise_gee_error(**kwargs: object) -> dict:
+def test_auto_recommendations_endpoint_requires_eo() -> None:
+    def _raise_eo_error(**kwargs: object) -> dict:
         raise RuntimeError(
-            "GEE deshabilitado. Define GEE_ENABLED=true y autentica Earth Engine."
+            "EO: sin datos. Configura SH_CLIENT_ID/SH_CLIENT_SECRET o coloca eo_parcels.json en data/."
         )
 
-    original_get_parcel_features = main_module.gee_client.get_parcel_features
+    original_get_parcel_features = main_module.eo_client.get_parcel_features
     original_c3s_forecast = main_module.c3s_client.get_seasonal_forecast
-    main_module.gee_client.get_parcel_features = _raise_gee_error
+    main_module.eo_client.get_parcel_features = _raise_eo_error
     main_module.c3s_client.get_seasonal_forecast = lambda **kwargs: "normal"
     try:
         response = client.post(
@@ -112,15 +112,15 @@ def test_auto_recommendations_endpoint_requires_gee() -> None:
             },
         )
     finally:
-        main_module.gee_client.get_parcel_features = original_get_parcel_features
+        main_module.eo_client.get_parcel_features = original_get_parcel_features
         main_module.c3s_client.get_seasonal_forecast = original_c3s_forecast
 
     assert response.status_code == 503
     payload = response.json()
-    assert "GEE" in payload["detail"]
+    assert "EO" in payload["detail"]
 
 
-def test_auto_recommendations_endpoint_with_mocked_gee_and_c3s() -> None:
+def test_auto_recommendations_endpoint_with_mocked_eo_and_c3s() -> None:
     def _fake_features(**kwargs: object) -> dict:
         return {
             "soil_moisture": 0.6,
@@ -128,7 +128,7 @@ def test_auto_recommendations_endpoint_with_mocked_gee_and_c3s() -> None:
             "stress_index": 0.25,
             "slope_percent": 12.0,
             "msavi2": 0.55,
-            "source": "gee",
+            "source": "sentinel-hub-cdse",
             "lat": kwargs["lat"],
             "lon": kwargs["lon"],
         }
@@ -136,9 +136,9 @@ def test_auto_recommendations_endpoint_with_mocked_gee_and_c3s() -> None:
     def _fake_c3s(**kwargs: object) -> str:
         return "wet"
 
-    original_get_parcel_features = main_module.gee_client.get_parcel_features
+    original_get_parcel_features = main_module.eo_client.get_parcel_features
     original_c3s_forecast = main_module.c3s_client.get_seasonal_forecast
-    main_module.gee_client.get_parcel_features = _fake_features
+    main_module.eo_client.get_parcel_features = _fake_features
     main_module.c3s_client.get_seasonal_forecast = _fake_c3s
     try:
         response = client.post(
@@ -155,13 +155,13 @@ def test_auto_recommendations_endpoint_with_mocked_gee_and_c3s() -> None:
             },
         )
     finally:
-        main_module.gee_client.get_parcel_features = original_get_parcel_features
+        main_module.eo_client.get_parcel_features = original_get_parcel_features
         main_module.c3s_client.get_seasonal_forecast = original_c3s_forecast
 
     assert response.status_code == 200
     payload = response.json()
     assert payload["parcel_id"] == "PAR-AUTO-2"
-    assert payload["data_source"] == "gee"
+    assert payload["data_source"] == "sentinel-hub-cdse"
     assert payload["debug_scores"]["seasonal_source"] == "manual"
     assert payload["debug_scores"]["seasonal_forecast_used"] == "normal"
     assert "debug_scores" in payload
@@ -175,7 +175,7 @@ def test_auto_recommendations_without_seasonal_uses_c3s_when_mocked() -> None:
             "stress_index": 0.28,
             "slope_percent": 10.0,
             "msavi2": 0.52,
-            "source": "gee",
+            "source": "sentinel-hub-cdse",
             "lat": kwargs["lat"],
             "lon": kwargs["lon"],
         }
@@ -183,9 +183,9 @@ def test_auto_recommendations_without_seasonal_uses_c3s_when_mocked() -> None:
     def _fake_c3s(**kwargs: object) -> str:
         return "wet"
 
-    original_get_parcel_features = main_module.gee_client.get_parcel_features
+    original_get_parcel_features = main_module.eo_client.get_parcel_features
     original_c3s_forecast = main_module.c3s_client.get_seasonal_forecast
-    main_module.gee_client.get_parcel_features = _fake_features
+    main_module.eo_client.get_parcel_features = _fake_features
     main_module.c3s_client.get_seasonal_forecast = _fake_c3s
     try:
         response = client.post(
@@ -201,7 +201,7 @@ def test_auto_recommendations_without_seasonal_uses_c3s_when_mocked() -> None:
             },
         )
     finally:
-        main_module.gee_client.get_parcel_features = original_get_parcel_features
+        main_module.eo_client.get_parcel_features = original_get_parcel_features
         main_module.c3s_client.get_seasonal_forecast = original_c3s_forecast
 
     assert response.status_code == 200

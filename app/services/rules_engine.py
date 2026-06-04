@@ -11,7 +11,7 @@ from app.services.fos_data import (
 )
 
 
-# Parámetros calibrados desde GEE (cálculo real con Sentinel-2 + DEM)
+# Parámetros calibrados desde Sentinel Hub CDSE (cálculo real con Sentinel-2 + DEM)
 ZONE_PARAMS = {
     AgroZone.HIGHLAND_HUMID: {
         "coverage_min": 0.10,

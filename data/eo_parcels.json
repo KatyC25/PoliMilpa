@@ -1,0 +1,70 @@
+{
+  "source": "sentinel-hub-cdse",
+  "generated_at": "2026-06-04T00:00:00",
+  "s2_dataset": "SENTINEL2_L2A",
+  "s1_dataset": "SENTINEL1_GRD",
+  "dem_dataset": "COPERNICUS_30",
+  "parcels": [
+    {
+      "id": "finca_flores",
+      "name": "Finca Flores",
+      "lat": 12.694,
+      "lon": -85.782,
+      "zone": "highland_humid",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-85.78415242035848, 12.69417903410759],
+          [-85.7802188621059, 12.6932144982547],
+          [-85.77973064659722, 12.695903276532],
+          [-85.78095226613284, 12.69750686516311],
+          [-85.78283944836183, 12.69789098638682],
+          [-85.78415242035848, 12.69417903410759]
+        ]]
+      },
+      "features": {
+        "msavi2": 0.52,
+        "soil_moisture": 0.45,
+        "shade_index": 0.68,
+        "stress_index": 0.32,
+        "slope_percent": 5.8,
+        "s1_dataset": "SENTINEL1_GRD",
+        "s2_dataset": "SENTINEL2_L2A",
+        "s2_index": "msavi2",
+        "dem_dataset": "COPERNICUS_30"
+      },
+      "tile_filename": "finca_flores_classification.png",
+      "tile_bounds": [[12.6932, -85.7842], [12.6979, -85.7797]]
+    },
+    {
+      "id": "finca_espinoza",
+      "name": "Finca Espinoza",
+      "lat": 11.926,
+      "lon": -86.586,
+      "zone": "transition",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-86.587140188229, 11.92523401899495],
+          [-86.58467637519456, 11.92620327457541],
+          [-86.58553667233754, 11.92818977629552],
+          [-86.58816454197625, 11.92720735545145],
+          [-86.587140188229, 11.92523401899495]
+        ]]
+      },
+      "features": {
+        "msavi2": 0.38,
+        "soil_moisture": 0.28,
+        "shade_index": 0.55,
+        "stress_index": 0.45,
+        "slope_percent": 3.2,
+        "s1_dataset": "SENTINEL1_GRD",
+        "s2_dataset": "SENTINEL2_L2A",
+        "s2_index": "msavi2",
+        "dem_dataset": "COPERNICUS_30"
+      },
+      "tile_filename": "finca_espinoza_classification.png",
+      "tile_bounds": [[11.9252, -86.5882], [11.9282, -86.5847]]
+    }
+  ]
+}

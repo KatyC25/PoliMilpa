@@ -65,16 +65,18 @@ Si no hay autenticacion o configuracion de GEE, el endpoint responde `503`.
 
 Autenticacion inicial:
 
-```fish
-source .venv/bin/activate.fish
-earthengine authenticate
+```bash
+# Configurar credenciales de Copernicus Data Space Ecosystem
+export SH_CLIENT_ID=sh-...
+export SH_CLIENT_SECRET=...
+pip install sentinelhub
 ```
 
-Capas que se usan actualmente:
+Capas que se usan actualmente (via Sentinel Hub CDSE):
 
-- `COPERNICUS/S2_SR_HARMONIZED` (MSAVI2)
-- `COPERNICUS/S1_GRD` (VV)
-- `COPERNICUS/DEM/GLO30` (pendiente)
+- `SENTINEL2_L2A` (MSAVI2 via Statistical API)
+- `SENTINEL1_GRD` (VV via Statistical API)
+- `COPERNICUS_30` (DEM)
 
 ## C3S integrado
 

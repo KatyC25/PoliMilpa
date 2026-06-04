@@ -128,6 +128,9 @@ class RecommendationResponse(BaseModel):
     debug_scores: Optional[Dict[str, Union[float, str]]] = None
     data_source: Optional[str] = None
     tile_url: Optional[str] = None
+    tile_bounds: Optional[List[List[float]]] = None
+    tile_type: Optional[str] = None
+    tile_layers: Optional[str] = None
     ai_advisory: Optional[str] = None
     whatsapp_preview: Optional[str] = None
     nino_alert: Optional[Dict[str, str]] = None

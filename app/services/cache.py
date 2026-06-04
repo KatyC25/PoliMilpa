@@ -48,5 +48,5 @@ class TTLCache:
         return wrapper
 
 
-gee_cache = TTLCache(default_ttl=3600)
+eo_cache = TTLCache(default_ttl=3600)
 c3s_cache = TTLCache(default_ttl=21600)
