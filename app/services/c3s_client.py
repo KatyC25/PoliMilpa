@@ -26,7 +26,10 @@ class C3SClient:
 
     def _build_request(self, lat: float, lon: float) -> dict:
         today = dt.date.today()
-        year, month = today.year, today.month
+        if today.month == 1:
+            year, month = today.year - 1, 12
+        else:
+            year, month = today.year, today.month - 1
         north = min(90.0, lat + 0.5)
         south = max(-90.0, lat - 0.5)
         west = max(-180.0, lon - 0.5)
