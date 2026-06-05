@@ -675,7 +675,19 @@ def get_zone_info(zone_id: str) -> ZoneInfoResponse:
             },
         }
 
-    nino_alert = get_nino_alert("normal")
+    _ZONE_COORDS = {
+        "norte": (13.09, -85.99),
+        "sur": (12.43, -86.88),
+        "centro": (14.03, -83.38),
+        "occidente": (12.13, -86.25),
+    }
+    seasonal_forecast = "normal"
+    try:
+        lat, lon = _ZONE_COORDS.get(zone_id, (12.13, -86.25))
+        seasonal_forecast = c3s_client.get_seasonal_forecast(lat, lon)
+    except Exception:
+        pass
+    nino_alert = get_nino_alert(seasonal_forecast)
 
     return ZoneInfoResponse(
         zone_id=zone_id,
