@@ -114,7 +114,7 @@ export type LoginResponse = {
 };
 
 const API_BASE_URL =
-	process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
+	process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://polimilpabackend.onrender.com";
 
 function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));

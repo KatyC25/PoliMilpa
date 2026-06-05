@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const brandLogo = "/assets/logo-polimilpa.png";
 const nicaraguaMap = "/assets/nicaragua.svg";
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
+const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://polimilpabackend.onrender.com";
 
 const DEPT_ZONE: Record<string, string> = {
   "NI-JI": "norte", "NI-MT": "norte",
