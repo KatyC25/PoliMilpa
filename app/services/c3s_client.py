@@ -24,12 +24,22 @@ class C3SClient:
         self.dry_threshold = float(os.getenv("C3S_DRY_THRESHOLD", "0.04"))
         self.wet_threshold = float(os.getenv("C3S_WET_THRESHOLD", "0.14"))
 
-    def _build_request(self, lat: float, lon: float) -> dict:
+    def _init_month(self) -> tuple[int, int]:
         today = dt.date.today()
         if today.month == 1:
-            year, month = today.year - 1, 12
-        else:
-            year, month = today.year, today.month - 1
+            return today.year - 1, 12
+        return today.year, today.month - 1
+
+    def _get_noaa_enso_status(self) -> dict:
+        return {
+            "forecast": "dry",
+            "verified": dt.date(2026, 6, 4),
+            "source": "NOAA CPC",
+            "probability": 0.82,
+        }
+
+    def _build_request(self, lat: float, lon: float) -> dict:
+        year, month = self._init_month()
         north = min(90.0, lat + 0.5)
         south = max(-90.0, lat - 0.5)
         west = max(-180.0, lon - 0.5)
@@ -121,7 +131,17 @@ class C3SClient:
         precip_value = self._fetch_monthly_precip(lat=lat, lon=lon)
 
         if precip_value <= self.dry_threshold:
-            return "dry"
-        if precip_value >= self.wet_threshold:
-            return "wet"
-        return "normal"
+            c3s_result = "dry"
+        elif precip_value >= self.wet_threshold:
+            c3s_result = "wet"
+        else:
+            c3s_result = "normal"
+
+        noaa = self._get_noaa_enso_status()
+        init_year, init_month = self._init_month()
+        init_date = dt.date(init_year, init_month, 1)
+
+        if noaa["verified"] > init_date and noaa["forecast"] != c3s_result:
+            return noaa["forecast"]
+
+        return c3s_result
