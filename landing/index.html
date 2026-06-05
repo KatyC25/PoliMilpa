@@ -298,27 +298,8 @@
           </div>
         </section>
 
-        <section id="fos-windows" class="fos-section">
-          <div class="container">
-            <div class="fos-header">
-              <p class="eyebrow">
-                <i class="fa-solid fa-calendar-check"></i>
-                Fechas Óptimas de Siembra
-              </p>
-              <h2>Ventanas activas por zona</h2>
-              <p>Datos públicos del MAG.</p>
-            </div>
-            <div id="fos-grid" class="fos-grid">
-              <div class="fos-loading">
-                <i class="fa-solid fa-circle-notch"></i>
-                Cargando ventanas de siembra...
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section id="como" class="steps">
-          <div class="steps-header">
+          <div style="margin-top: 30px;" class="steps-header">
             <p class="eyebrow">Cómo funciona</p>
             <h2>Tu ruta en tres pasos</h2>
           </div>
@@ -652,105 +633,6 @@
         const yearNode = document.getElementById("footer-year");
         if (!yearNode) return;
         yearNode.textContent = String(new Date().getFullYear());
-      })();
-    </script>
-
-    <script>
-      (() => {
-        const API_BASE = window.location.origin.includes("localhost") || window.location.origin.includes("127.0.0.1")
-          ? "http://127.0.0.1:8000"
-          : "https://polimilpabackend.onrender.com";
-
-        const ZONES = [
-          { id: "norte", name: "Z1 Húmedo de Altura", dot: "highland" },
-          { id: "sur", name: "Z2 Corredor Seco", dot: "dry" },
-          { id: "centro", name: "Z3 Caribe Subhúmedo", dot: "subhumid" },
-          { id: "occidente", name: "Z4 Transición", dot: "transition" },
-        ];
-
-        const TAG_LABELS = {
-          activa: { label: "Activa", cls: "active" },
-          proxima: { label: "Próxima", cls: "upcoming" },
-          expirada: { label: "Cerrada", cls: "closed" },
-          no_aplica: { label: "N/A", cls: "na" },
-        };
-
-        const STATUS_CLS = { activa: "active", proxima: "upcoming", expirada: "closed", no_aplica: "na" };
-
-        async function fetchZone(zoneId) {
-          try {
-            const res = await fetch(`${API_BASE}/v1/zones/${zoneId}`);
-            if (!res.ok) return null;
-            return res.json();
-          } catch {
-            return null;
-          }
-        }
-
-        function renderCard(zone, data) {
-          const fos = data?.fos_windows;
-          const activas = fos?.activas || [];
-          const proximas = fos?.proximas || [];
-          const expiradas = fos?.expiradas || [];
-          const noAplica = fos?.no_aplica || [];
-          const all = [...activas, ...(proximas || []), ...(expiradas || []), ...(noAplica || [])];
-
-          if (all.length === 0) {
-            return "";
-          }
-
-          const rows = all.map((w) => {
-            const statusCls = STATUS_CLS[w.status] || "na";
-            const tag = TAG_LABELS[w.status] || TAG_LABELS["no_aplica"];
-            let dateStr = "—";
-            if (w.status === "activa") {
-              dateStr = `${w.inicio} – ${w.fin}`;
-            } else if (w.status === "proxima" && w.dias_restantes != null) {
-              dateStr = `En ${w.dias_restantes} días`;
-            } else if (w.status === "proxima") {
-              dateStr = w.inicio;
-            }
-            return `<div class="fos-crop-row">
-              <span class="fos-crop-dot ${statusCls}"></span>
-              <span class="fos-crop-name">${w.crop}</span>
-              <span class="fos-crop-date">${dateStr}</span>
-              <span class="fos-crop-tag ${tag.cls}">${tag.label}</span>
-            </div>`;
-          }).join("");
-
-          const activasCount = activas.length;
-          let note = "";
-          if (activasCount > 0) {
-            note = `<div class="fos-card-note"><i class="fa-solid fa-circle-check"></i>${activasCount} cultivo(s) en ventana</div>`;
-          }
-
-          return `<div class="fos-card">
-            <div class="fos-card-head">
-              <span class="fos-card-dot legend-dot ${zone.dot}"></span>
-              <span class="fos-card-name">${zone.name}</span>
-            </div>
-            <div class="fos-card-list">${rows}</div>
-            ${note}
-          </div>`;
-        }
-
-        async function loadFOS() {
-          const grid = document.getElementById("fos-grid");
-          if (!grid) return;
-
-          const results = await Promise.all(ZONES.map(async (z) => {
-            const data = await fetchZone(z.id);
-            return { zone: z, data };
-          }));
-
-          grid.innerHTML = results.map(({ zone, data }) => renderCard(zone, data)).join("");
-
-          if (grid.classList.contains("reveal")) {
-            grid.classList.add("is-visible");
-          }
-        }
-
-        loadFOS();
       })();
     </script>
 
