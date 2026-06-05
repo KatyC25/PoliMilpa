@@ -756,6 +756,55 @@
 
     <script>
       (() => {
+        const DEPT_ZONE = {
+          "NI-JI": "norte", "NI-MT": "norte",
+          "NI-MD": "sur", "NI-ES": "sur", "NI-NS": "sur", "NI-LE": "sur", "NI-CI": "sur",
+          "NI-AN": "centro", "NI-AS": "centro", "NI-SJ": "centro",
+          "NI-MN": "occidente", "NI-MS": "occidente", "NI-GR": "occidente",
+          "NI-CA": "occidente", "NI-RI": "occidente", "NI-BO": "occidente", "NI-CO": "occidente",
+        };
+        const NEXTJS_URL = "https://poli-milpa-h5sp.vercel.app";
+
+        function attachMapClicks() {
+          const obj = document.querySelector(".zones-map");
+          if (!obj) return;
+
+          const onLoad = () => {
+            const doc = obj.contentDocument;
+            if (!doc) return;
+
+            const paths = doc.querySelectorAll("path[id]");
+            paths.forEach((path) => {
+              const zoneId = DEPT_ZONE[path.id];
+              if (!zoneId) return;
+
+              path.style.cursor = "pointer";
+              path.addEventListener("click", () => {
+                window.location.href = NEXTJS_URL + "?zone=" + zoneId;
+              });
+              path.addEventListener("mouseenter", () => {
+                path.style.opacity = "0.75";
+              });
+              path.addEventListener("mouseleave", () => {
+                path.style.opacity = "";
+              });
+            });
+          };
+
+          obj.addEventListener("load", onLoad);
+          if (obj.contentDocument) onLoad();
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", attachMapClicks);
+        } else {
+          attachMapClicks();
+        }
+      })();
+    </script>
+
+    <script>
+      (() => {
         try {
           if ("scrollRestoration" in history) {
             history.scrollRestoration = "manual";

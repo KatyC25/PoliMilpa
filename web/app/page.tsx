@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const brandLogo = "/assets/logo-polimilpa.png";
 const nicaraguaMap = "/assets/nicaragua.svg";
-const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://polimilpabackend.onrender.com";
+const API = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://polimilpabackend.onrender.com").replace(/\/+$/, "");
 
 const DEPT_ZONE: Record<string, string> = {
   "NI-JI": "norte", "NI-MT": "norte",
@@ -129,6 +129,14 @@ export default function Home() {
   }, []);
 
   const [satData] = useState<{ loading: boolean }>({ loading: false });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const zone = params.get("zone");
+    if (zone && (zone === "norte" || zone === "sur" || zone === "centro" || zone === "occidente")) {
+      selectZone(zone);
+    }
+  }, [selectZone]);
 
   useEffect(() => {
     const obj = svgRef.current;

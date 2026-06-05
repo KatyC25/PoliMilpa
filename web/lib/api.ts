@@ -113,8 +113,9 @@ export type LoginResponse = {
 	token_type: string;
 };
 
-const API_BASE_URL =
-	process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://polimilpabackend.onrender.com";
+const API_BASE_URL = (
+	process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://polimilpabackend.onrender.com"
+).replace(/\/+$/, "");
 
 function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
